@@ -1,17 +1,17 @@
 package me.davidgomes.demo
 
-import org.bukkit.ChatColor
+import org.bukkit.Effect
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
+import org.bukkit.entity.Damageable
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.FallingBlock
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
-import org.bukkit.event.block.EntityBlockFormEvent
 import org.bukkit.event.entity.EntityChangeBlockEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.metadata.FixedMetadataValue
@@ -30,6 +30,9 @@ class EvtHandler : Listener {
         val blockInSight = blocksInSight.firstOrNull { !it.isEmpty } ?: return
 
         val spawnLocation = blockInSight.location.add(0.0, 5.0, 0.0)
+
+        if (hasBlocksBelow(spawnLocation, 5)) return
+
         val world = spawnLocation.world
 
         if (world == null) {
@@ -45,11 +48,10 @@ class EvtHandler : Listener {
             createBlockData.facing = BlockFace.SOUTH
         }
 
-        val fallingAnvil = spawnLocation.world!!.spawnFallingBlock(spawnLocation, createBlockData)
+        val fallingAnvil = world.spawnFallingBlock(spawnLocation, createBlockData)
 
         fallingAnvil.setMetadata("sender", FixedMetadataValue(plugin, evt.player.uniqueId.toString()))
-
-        evt.player.sendMessage(ChatColor.AQUA + "Spawned!")
+        fallingAnvil.setHurtEntities(true)
     }
 
     @EventHandler
@@ -71,9 +73,21 @@ class EvtHandler : Listener {
             return
         }
 
-        // deal dammage
+        val hitLocation = evt.entity.location
+        val world = hitLocation.world
 
-        evt.entity.remove()
-        evt.block.breakNaturally()
+        if (world == null) {
+            log.warning("Couldn't find world on anvil's location!")
+        }
+
+        world!!.getNearbyEntities(hitLocation, 1.0, 1.0, 1.0).filterIsInstance<Damageable>()
+            .forEach {
+                it.damage(5.0, sender)
+            }
+
+        world.playEffect(hitLocation, Effect.ANVIL_LAND, null)
+        world.playSound(hitLocation, Sound.BLOCK_ANVIL_HIT, 100.0f, 1.0f)
+
+        evt.isCancelled = true
     }
 }
