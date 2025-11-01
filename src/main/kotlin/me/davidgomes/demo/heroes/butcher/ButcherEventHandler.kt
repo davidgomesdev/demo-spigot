@@ -4,13 +4,16 @@ import me.davidgomes.demo.hasBlocksBelow
 import me.davidgomes.demo.log
 import me.davidgomes.demo.plugin
 import org.bukkit.Effect
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
 import org.bukkit.entity.Damageable
+import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.FallingBlock
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
@@ -21,9 +24,18 @@ import org.bukkit.util.Vector
 import java.util.UUID
 
 private object AnvilAbilityAttributes {
-    const val DROP_DAMAGE = 5.0
+    const val MAX_CAST_DISTANCE = 20
     const val CAST_RANGE = 5
+    const val FALL_HEIGHT = 5.0
+    const val DROP_DAMAGE = 5.0
     val AOE: Vector = Vector(1.0, 1.0, 1.0)
+
+    object Land {
+        val EFFECT: Effect = Effect.ANVIL_LAND
+        val SOUND: Sound = Sound.BLOCK_ANVIL_HIT
+        const val VOLUME = 100.0f
+        const val PITCH = 1.0f
+    }
 }
 
 private const val senderTag = "sender"
@@ -37,32 +49,16 @@ class ButcherEventHandler : Listener {
 
         evt.isCancelled = true
 
-        val blocksInSight = evt.player.getLineOfSight(null, 20)
-        val blockInSight = blocksInSight.firstOrNull { !it.isEmpty } ?: return
+        with(AnvilAbilityAttributes) {
+            val blocksInSight = evt.player.getLineOfSight(null, MAX_CAST_DISTANCE)
+            val blockInSight = blocksInSight.firstOrNull { !it.isEmpty } ?: return
 
-        val spawnLocation = blockInSight.location.add(0.0, 5.0, 0.0)
+            val spawnLocation = blockInSight.location.add(0.0, FALL_HEIGHT, 0.0)
 
-        if (hasBlocksBelow(spawnLocation, AnvilAbilityAttributes.CAST_RANGE)) return
+            if (hasBlocksBelow(spawnLocation, CAST_RANGE)) return
 
-        val world = spawnLocation.world
-
-        if (world == null) {
-            log.warning("Player ${evt.player.name} is in no world!?")
-            return
+            spawnFallingAnvil(spawnLocation, evt.player)
         }
-
-        val createBlockData = Material.ANVIL.createBlockData() as Directional
-
-        if (evt.player.facing.modZ != 0) {
-            createBlockData.facing = BlockFace.EAST
-        } else {
-            createBlockData.facing = BlockFace.SOUTH
-        }
-
-        val fallingAnvil = world.spawnFallingBlock(spawnLocation, createBlockData)
-
-        fallingAnvil.setMetadata(senderTag, FixedMetadataValue(plugin, evt.player.uniqueId.toString()))
-        fallingAnvil.setHurtEntities(true)
     }
 
     @EventHandler
@@ -73,18 +69,9 @@ class ButcherEventHandler : Listener {
 
         if (fallingBlock.blockData.material != Material.ANVIL) return
 
-        val senderIdMetadata =
-            evt.entity.getMetadata(senderTag).firstOrNull { it.owningPlugin?.name == plugin.name } ?: return
+        val sender = getSenderOf(fallingBlock) ?: return
 
-        val senderId = UUID.fromString(senderIdMetadata.asString())
-        val sender = plugin.server.getPlayer(senderId)
-
-        if (sender == null) {
-            log.warning("Couldn't find player with id $senderId")
-            return
-        }
-
-        val hitLocation = evt.entity.location
+        val hitLocation = fallingBlock.location
         val world = hitLocation.world
 
         if (world == null) {
@@ -99,9 +86,48 @@ class ButcherEventHandler : Listener {
                 }
         }
 
-        world.playEffect(hitLocation, Effect.ANVIL_LAND, null)
-        world.playSound(hitLocation, Sound.BLOCK_ANVIL_HIT, 100.0f, 1.0f)
+        with(AnvilAbilityAttributes.Land) {
+            world.playEffect(hitLocation, EFFECT, null)
+            world.playSound(hitLocation, SOUND, VOLUME, PITCH)
+        }
 
         evt.isCancelled = true
+    }
+
+    private fun spawnFallingAnvil(spawnLocation: Location, sender: Player) {
+        val world = spawnLocation.world
+
+        if (world == null) {
+            log.warning("Player ${sender.name} is in no world!?")
+            return
+        }
+
+        val createBlockData = Material.ANVIL.createBlockData() as Directional
+
+        if (sender.facing.modZ != 0) {
+            createBlockData.facing = BlockFace.EAST
+        } else {
+            createBlockData.facing = BlockFace.SOUTH
+        }
+
+        val fallingAnvil = world.spawnFallingBlock(spawnLocation, createBlockData)
+
+        fallingAnvil.setMetadata(senderTag, FixedMetadataValue(plugin, sender.uniqueId.toString()))
+        fallingAnvil.setHurtEntities(true)
+    }
+
+    private fun getSenderOf(entity: Entity): Player? {
+        val senderIdMetadata =
+            entity.getMetadata(senderTag).firstOrNull { it.owningPlugin?.name == plugin.name } ?: return null
+
+        val senderId = UUID.fromString(senderIdMetadata.asString())
+        val sender = plugin.server.getPlayer(senderId)
+
+        if (sender == null) {
+            log.warning("Couldn't find player with id $senderId")
+            return null
+        }
+
+        return sender
     }
 }
