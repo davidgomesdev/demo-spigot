@@ -12,12 +12,13 @@ class Demo : JavaPlugin() {
     override fun onEnable() {
         log = Bukkit.getLogger()
         plugin = this
-        logger.info("Enabled " + this.name)
+        server.broadcastMessage("Minigame loaded and ready to play!")
+        logger.info("Enabled")
 
         server.pluginManager.registerEvents(ButcherEventHandler(), this)
     }
 
     override fun onDisable() {
-        logger.info("Disabled " + this.name)
+        logger.info("Disabled")
     }
 }
