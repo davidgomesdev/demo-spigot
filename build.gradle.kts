@@ -18,3 +18,17 @@ repositories {
 dependencies {
     compileOnly("org.spigotmc:spigot-api:$spigotVersion")
 }
+
+tasks.shadowJar {
+    archiveVersion = ""
+}
+
+val deployPlugin = tasks.register<Copy>("deployPlugin") {
+    group = "deploy"
+    description = "Copies to the plugins folder of the server"
+
+    dependsOn(tasks.shadowJar)
+
+    from(layout.buildDirectory.file("libs/demo-all.jar"))
+    into(System.getenv("SERVER_PLUGINS_DIRECTORY"))
+}
