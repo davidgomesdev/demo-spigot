@@ -22,15 +22,16 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.util.Vector
 import java.util.UUID
+import kotlin.math.roundToInt
 
 private object AnvilAbilityAttributes {
     const val MAX_CAST_DISTANCE = 20
-    const val CAST_RANGE = 5
     const val FALL_HEIGHT = 5.0
-    const val DROP_DAMAGE = 5.0
-    val AOE: Vector = Vector(1.0, 1.0, 1.0)
+    const val FALL_SPEED_MODIFIER = -0.5
 
     object Land {
+        const val DROP_DAMAGE = 5.0
+        val AOE: Vector = Vector(1.0, 1.0, 1.0)
         val EFFECT: Effect = Effect.ANVIL_LAND
         val SOUND: Sound = Sound.BLOCK_ANVIL_HIT
         const val VOLUME = 100.0f
@@ -55,7 +56,7 @@ class ButcherEventHandler : Listener {
 
             val spawnLocation = blockInSight.location.add(0.0, FALL_HEIGHT, 0.0)
 
-            if (hasBlocksBelow(spawnLocation, CAST_RANGE)) return
+            if (hasBlocksBelow(spawnLocation, FALL_HEIGHT.roundToInt())) return
 
             spawnFallingAnvil(spawnLocation, evt.player)
         }
@@ -79,14 +80,13 @@ class ButcherEventHandler : Listener {
             return
         }
 
-        with(AnvilAbilityAttributes.AOE) {
-            world.getNearbyEntities(hitLocation, x, y, z).filterIsInstance<Damageable>()
-                .forEach {
-                    it.damage(AnvilAbilityAttributes.DROP_DAMAGE, sender)
-                }
-        }
-
         with(AnvilAbilityAttributes.Land) {
+            with(AOE) {
+                world.getNearbyEntities(hitLocation, x, y, z).filterIsInstance<Damageable>()
+                    .forEach {
+                        it.damage(DROP_DAMAGE, sender)
+                    }
+            }
             world.playEffect(hitLocation, EFFECT, null)
             world.playSound(hitLocation, SOUND, VOLUME, PITCH)
         }
@@ -114,6 +114,7 @@ class ButcherEventHandler : Listener {
 
         fallingAnvil.setMetadata(senderTag, FixedMetadataValue(plugin, sender.uniqueId.toString()))
         fallingAnvil.setHurtEntities(true)
+        fallingAnvil.velocity = Vector(0.0, AnvilAbilityAttributes.FALL_SPEED_MODIFIER, 0.0)
     }
 
     private fun getSenderOf(entity: Entity): Player? {
