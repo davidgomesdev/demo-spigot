@@ -1,5 +1,6 @@
 package me.davidgomes.demo
 
+import me.davidgomes.demo.heroes.butcher.ButcherEventHandler
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.logging.Logger
@@ -13,7 +14,7 @@ class Demo : JavaPlugin() {
         plugin = this
         logger.info("Enabled " + this.name)
 
-        server.pluginManager.registerEvents(EvtHandler(), this)
+        server.pluginManager.registerEvents(ButcherEventHandler(), this)
     }
 
     override fun onDisable() {

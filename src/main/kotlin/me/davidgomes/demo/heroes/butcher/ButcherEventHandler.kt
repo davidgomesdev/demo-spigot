@@ -1,5 +1,8 @@
-package me.davidgomes.demo
+package me.davidgomes.demo.heroes.butcher
 
+import me.davidgomes.demo.hasBlocksBelow
+import me.davidgomes.demo.log
+import me.davidgomes.demo.plugin
 import org.bukkit.Effect
 import org.bukkit.Material
 import org.bukkit.Sound
@@ -17,9 +20,9 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.metadata.FixedMetadataValue
 import java.util.UUID
 
-class EvtHandler : Listener {
+class ButcherEventHandler : Listener {
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
         if (evt.item?.type != Material.ANVIL) return
         if (evt.action != Action.RIGHT_CLICK_AIR && evt.action != Action.RIGHT_CLICK_BLOCK) return
