@@ -23,6 +23,7 @@ import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.util.Vector
 import java.util.UUID
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 private object AnvilAbilityAttributes {
     const val MAX_CAST_DISTANCE = 20
@@ -35,7 +36,7 @@ private object AnvilAbilityAttributes {
         val EFFECT: Effect = Effect.ANVIL_LAND
         val SOUND: Sound = Sound.BLOCK_ANVIL_HIT
         const val VOLUME = 100.0f
-        const val PITCH = 1.0f
+        val pitch get() = run { Random.nextFloat() }
     }
 }
 
@@ -89,7 +90,7 @@ class ButcherEventHandler : Listener {
                     }
             }
             world.playEffect(hitLocation, EFFECT, null)
-            world.playSound(hitLocation, SOUND, VOLUME, PITCH)
+            world.playSound(hitLocation, SOUND, VOLUME, pitch)
         }
 
         evt.isCancelled = true
