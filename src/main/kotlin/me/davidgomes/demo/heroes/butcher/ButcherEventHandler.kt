@@ -48,6 +48,7 @@ class ButcherEventHandler : Listener {
         if (evt.item == null || evt.item?.type != Material.ANVIL) return
         if (evt.action != Action.RIGHT_CLICK_AIR && evt.action != Action.RIGHT_CLICK_BLOCK) return
 
+        // Stop interaction when it's an ability cast (e.g. to prevent placing the anvil or right-clicking on a chest)
         evt.isCancelled = true
 
         with(AnvilAbilityAttributes) {
