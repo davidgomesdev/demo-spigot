@@ -1,12 +1,8 @@
 package me.davidgomes.demo.heroes.butcher
 
 import me.davidgomes.demo.hasBlocksBelow
-import me.davidgomes.demo.log
-import me.davidgomes.demo.plugin
-import org.bukkit.Effect
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.Sound
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
 import org.bukkit.entity.Damageable
@@ -20,34 +16,22 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.entity.EntityChangeBlockEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.metadata.FixedMetadataValue
+import org.bukkit.plugin.Plugin
 import org.bukkit.util.Vector
 import java.util.UUID
+import java.util.logging.Logger
 import kotlin.math.roundToInt
-import kotlin.random.Random
-
-private object AnvilAbilityAttributes {
-    const val MAX_CAST_DISTANCE = 20
-    const val FALL_HEIGHT = 5.0
-    const val FALL_SPEED_MODIFIER = -0.5
-
-    object Land {
-        const val DROP_DAMAGE = 5.0
-        val AOE: Vector = Vector(1.0, 1.0, 1.0)
-        val EFFECT: Effect = Effect.ANVIL_LAND
-        val SOUND: Sound = Sound.BLOCK_ANVIL_HIT
-        const val VOLUME = 100.0f
-        val pitch get() = run { Random.nextFloat() }
-    }
-}
 
 private const val senderTag = "sender"
 
-class ButcherEventHandler : Listener {
+class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
 
     @EventHandler
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
-        if (evt.item == null || evt.item?.type != Material.ANVIL) return
-        if (evt.action != Action.RIGHT_CLICK_AIR && evt.action != Action.RIGHT_CLICK_BLOCK) return
+        if (evt.item?.type != Material.ANVIL) return
+        if (!(evt.action == Action.RIGHT_CLICK_AIR || evt.action == Action.RIGHT_CLICK_BLOCK)) return
+
+        logger.fine("Player ${evt.player.name} casted the anvil ability")
 
         // Stop interaction when it's an ability cast (e.g. to prevent placing the anvil or right-clicking on a chest)
         evt.isCancelled = true
@@ -78,11 +62,11 @@ class ButcherEventHandler : Listener {
         val world = hitLocation.world
 
         if (world == null) {
-            log.warning("Couldn't find world on anvil's location!")
+            logger.warning("Couldn't find world on anvil's location!")
             return
         }
 
-        with(AnvilAbilityAttributes.Land) {
+        with(AnvilAbilityAttributes.Landing) {
             with(AOE) {
                 world.getNearbyEntities(hitLocation, x, y, z).filterIsInstance<Damageable>()
                     .forEach {
@@ -99,20 +83,21 @@ class ButcherEventHandler : Listener {
     private fun spawnFallingAnvil(spawnLocation: Location, sender: Player) {
         val world = spawnLocation.world
 
+        // probably when the player is dead
         if (world == null) {
-            log.warning("Player ${sender.name} is in no world!?")
+            logger.warning("Player ${sender.name} is in no world!?")
             return
         }
 
-        val createBlockData = Material.ANVIL.createBlockData() as Directional
-
-        if (sender.facing.modZ != 0) {
-            createBlockData.facing = BlockFace.EAST
-        } else {
-            createBlockData.facing = BlockFace.SOUTH
+        val fallingAnvil = world.spawn(spawnLocation, FallingBlock::class.java) {
+            it.blockData = (Material.ANVIL.createBlockData() as Directional).apply {
+                facing = if (sender.facing.modZ != 0) {
+                    BlockFace.EAST
+                } else {
+                    BlockFace.SOUTH
+                }
+            }
         }
-
-        val fallingAnvil = world.spawnFallingBlock(spawnLocation, createBlockData)
 
         fallingAnvil.setMetadata(senderTag, FixedMetadataValue(plugin, sender.uniqueId.toString()))
         fallingAnvil.setHurtEntities(true)
@@ -127,7 +112,7 @@ class ButcherEventHandler : Listener {
         val sender = plugin.server.getPlayer(senderId)
 
         if (sender == null) {
-            log.warning("Couldn't find player with id $senderId")
+            logger.warning("Couldn't find player with id $senderId")
             return null
         }
 

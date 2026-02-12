@@ -1,21 +1,12 @@
 package me.davidgomes.demo
 
-import me.davidgomes.demo.heroes.butcher.ButcherEventHandler
-import org.bukkit.Bukkit
+import me.davidgomes.demo.heroes.butcher.AnvilDropEventHandler
 import org.bukkit.plugin.java.JavaPlugin
-import java.util.logging.Logger
-
-lateinit var log: Logger
-lateinit var plugin: JavaPlugin
 
 class Demo : JavaPlugin() {
     override fun onEnable() {
-        log = Bukkit.getLogger()
-        plugin = this
-        server.broadcastMessage("Minigame loaded and ready to play!")
         logger.info("Enabled")
-
-        server.pluginManager.registerEvents(ButcherEventHandler(), this)
+        server.pluginManager.registerEvents(AnvilDropEventHandler(this, logger), this)
     }
 
     override fun onDisable() {

@@ -14,3 +14,9 @@ auto-reload:
 ```
 
 Then to deploy run the `deployPlugin` Gradle task with the env variable `SERVER_PLUGINS_DIRECTORY=<...>/server/plugins`
+
+## Debugging
+
+We can log and also attach a debugger to the server.
+
+Info here: https://docs.papermc.io/paper/dev/debugging/
