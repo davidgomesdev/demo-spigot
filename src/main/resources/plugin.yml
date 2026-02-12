@@ -2,4 +2,4 @@ name: Demo
 version: 1.0
 author: David Gomes
 main: me.davidgomes.demo.Demo
-api-version: 1.16.5
+api-version: '1.21.11'
