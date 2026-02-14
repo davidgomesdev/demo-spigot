@@ -1,7 +1,7 @@
 package me.davidgomes.demo.arena
 
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.util.UUID
+import java.util.*
 import java.util.logging.Logger
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,10 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ArenaManagerTest {
-
-    private fun createArenaManager(): ArenaManager {
-        return ArenaManager(Logger.getLogger("ArenaManagerTest"))
-    }
+    private fun createArenaManager(): ArenaManager = ArenaManager(Logger.getLogger("ArenaManagerTest"))
 
     @Test
     fun `joinArena assigns player to a team`() {
@@ -105,4 +102,3 @@ class ArenaManagerTest {
         assertEquals(Team.entries.first(), team)
     }
 }
-

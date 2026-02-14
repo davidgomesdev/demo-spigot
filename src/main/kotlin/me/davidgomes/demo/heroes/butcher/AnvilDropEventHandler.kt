@@ -8,32 +8,30 @@ import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
-import org.bukkit.entity.Damageable
-import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.FallingBlock
-import org.bukkit.entity.Player
+import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.Action
 import org.bukkit.event.entity.EntityChangeBlockEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import org.bukkit.util.Vector
-import java.util.UUID
+import java.util.*
 import java.util.logging.Logger
 import kotlin.math.roundToInt
 
-private const val senderTag = "sender"
+private const val SENDER_TAG = "sender"
 
 // TODO: add tests
-class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
-
-    val anvilDropItem = InteractableItem(
-        material = Material.ANVIL,
-        name = "Anvil Drop"
-    )
+class AnvilDropEventHandler(
+    val plugin: Plugin,
+    val logger: Logger,
+) : Listener {
+    val anvilDropItem =
+        InteractableItem(
+            material = Material.ANVIL,
+            name = "Anvil Drop",
+        )
 
     @EventHandler
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
@@ -82,9 +80,11 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
 
         with(AnvilAbilityAttributes.Landing) {
             with(AOE) {
-                world.getNearbyEntities(hitLocation, x, y, z).filterIsInstance<Damageable>()
+                world
+                    .getNearbyEntities(hitLocation, x, y, z)
+                    .filterIsInstance<Damageable>()
                     .forEach {
-                        logger.info("Damaging ${it.name}")
+                        logger.info("Damaging '${it.name}'")
                         it.damage(DROP_DAMAGE, sender)
                     }
             }
@@ -95,7 +95,10 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
         evt.isCancelled = true
     }
 
-    fun spawnFallingAnvil(spawnLocation: Location, sender: Player): FallingBlock {
+    fun spawnFallingAnvil(
+        spawnLocation: Location,
+        sender: Player,
+    ): FallingBlock {
         val world = spawnLocation.world
 
         return world.spawn(spawnLocation, FallingBlock::class.java) { anvil ->
@@ -103,22 +106,27 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
         }
     }
 
-    fun setAnvilProperties(anvil: FallingBlock, sender: Player) {
+    fun setAnvilProperties(
+        anvil: FallingBlock,
+        sender: Player,
+    ) {
         val blockData = plugin.server.createBlockData(Material.ANVIL) as Directional
 
-        anvil.blockData = blockData.apply {
-            facing = if (sender.facing.modZ != 0) {
-                BlockFace.EAST
-            } else {
-                BlockFace.SOUTH
+        anvil.blockData =
+            blockData.apply {
+                facing =
+                    if (sender.facing.modZ != 0) {
+                        BlockFace.EAST
+                    } else {
+                        BlockFace.SOUTH
+                    }
             }
-        }
 
         // Todo: extract to a generic function "setSender"
         anvil.persistentDataContainer.set(
-            NamespacedKey(plugin, senderTag),
+            NamespacedKey(plugin, SENDER_TAG),
             PersistentDataType.STRING,
-            sender.uniqueId.toString()
+            sender.uniqueId.toString(),
         )
 
         // Damaged is done in the EntityChangeBlockEvent
@@ -127,10 +135,11 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
     }
 
     private fun getSenderOf(entity: Entity): Player? {
-        val senderId = entity.persistentDataContainer.get(
-            NamespacedKey(plugin, senderTag),
-            PersistentDataType.STRING
-        ) ?: return null
+        val senderId =
+            entity.persistentDataContainer.get(
+                NamespacedKey(plugin, SENDER_TAG),
+                PersistentDataType.STRING,
+            ) ?: return null
         val sender = plugin.server.getPlayer(UUID.fromString(senderId))
 
         if (sender == null) {
