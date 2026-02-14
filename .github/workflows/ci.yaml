@@ -22,8 +22,7 @@ jobs:
         run: ./gradlew build
 
       - name: Run ktlint
-        run: ./gradlew ktlint
+        run: ./gradlew ktlintCheck
 
       - name: Verify code coverage
         run: ./gradlew jacocoTestCoverageVerification
-
