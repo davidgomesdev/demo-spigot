@@ -1,6 +1,8 @@
 plugins {
     kotlin("jvm")
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    jacoco
 }
 
 group = "me.davidgomes"
@@ -23,6 +25,7 @@ repositories {
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
 }
+
 dependencies {
     compileOnly("io.papermc.paper:paper-api:$paperVersion")
 
@@ -40,6 +43,28 @@ tasks.test {
     // Paper uses byte buddy for its event system, which relies on dynamic class loading.
     // This is disabled by default in Java 21, so we need to re-enable it for the tests to work.
     jvmArgs("-XX:+EnableDynamicAgentLoading")
+
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            limit {
+                minimum = BigDecimal.valueOf(0.7)
+            }
+        }
+    }
 }
 
 tasks.shadowJar {
