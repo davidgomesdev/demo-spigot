@@ -1,6 +1,8 @@
 package me.davidgomes.demo.heroes.butcher
 
 import me.davidgomes.demo.hasBlocksBelow
+import me.davidgomes.demo.isRightClick
+import me.davidgomes.demo.items.InteractableItem
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -28,12 +30,17 @@ private const val senderTag = "sender"
 // TODO: add tests
 class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
 
+    val anvilDropItem = InteractableItem(
+        material = Material.ANVIL,
+        name = "Anvil Drop"
+    )
+
     @EventHandler
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
-        if (evt.item?.type != Material.ANVIL) return
-        if (!(evt.action == Action.RIGHT_CLICK_AIR || evt.action == Action.RIGHT_CLICK_BLOCK)) return
+        if (!evt.isRightClick()) return
+        if (anvilDropItem isNotTheSame evt.item) return
 
-        logger.fine("Player ${evt.player.name} casted the anvil ability")
+        logger.info("Player ${evt.player.name} casted the anvil ability")
 
         // Stop interaction when it's an ability cast (e.g. to prevent placing the anvil or right-clicking on a chest)
         evt.isCancelled = true
@@ -46,7 +53,6 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
 
             // probably when the player is dead
             if (spawnLocation.world == null) {
-                logger.warning("Player ${evt.player.name} is in no world!?")
                 return
             }
 
@@ -62,7 +68,7 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
 
         val fallingBlock = evt.entity as FallingBlock
 
-        if (fallingBlock.blockData.material != Material.ANVIL) return
+        if (fallingBlock.blockData.material != anvilDropItem.material) return
 
         val sender = getSenderOf(fallingBlock) ?: return
 
@@ -78,7 +84,7 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
             with(AOE) {
                 world.getNearbyEntities(hitLocation, x, y, z).filterIsInstance<Damageable>()
                     .forEach {
-                        logger.info("Damaging ${it.uniqueId}")
+                        logger.info("Damaging ${it.name}")
                         it.damage(DROP_DAMAGE, sender)
                     }
             }
@@ -128,7 +134,6 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
         val sender = plugin.server.getPlayer(UUID.fromString(senderId))
 
         if (sender == null) {
-            logger.info("Couldn't find player with id $senderId (left the server?)")
             return null
         }
 

@@ -35,7 +35,7 @@ class ArenaEventHandler(val arenaManager: ArenaManager) : Listener {
 
     @EventHandler
     fun onPlayerDropItem(event: PlayerDropItemEvent) {
-        if (!(arenaJoinItem isTheSame event.itemDrop)) return
+        if (arenaJoinItem isNotTheSame event.itemDrop) return
 
         event.isCancelled = true
     }
