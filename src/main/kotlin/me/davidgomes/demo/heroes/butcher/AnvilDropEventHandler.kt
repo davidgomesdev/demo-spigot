@@ -25,6 +25,7 @@ import kotlin.math.roundToInt
 
 private const val senderTag = "sender"
 
+// TODO: add tests
 class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
 
     @EventHandler
@@ -43,6 +44,12 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
 
             val spawnLocation = blockInSight.location.add(0.0, FALL_HEIGHT, 0.0)
 
+            // probably when the player is dead
+            if (spawnLocation.world == null) {
+                logger.warning("Player ${evt.player.name} is in no world!?")
+                return
+            }
+
             if (hasBlocksBelow(spawnLocation, FALL_HEIGHT.roundToInt())) return
 
             spawnFallingAnvil(spawnLocation, evt.player)
@@ -58,6 +65,7 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
         if (fallingBlock.blockData.material != Material.ANVIL) return
 
         val sender = getSenderOf(fallingBlock) ?: return
+
         val hitLocation = fallingBlock.location
         val world = hitLocation.world
 
@@ -70,6 +78,7 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
             with(AOE) {
                 world.getNearbyEntities(hitLocation, x, y, z).filterIsInstance<Damageable>()
                     .forEach {
+                        logger.info("Damaging ${it.uniqueId}")
                         it.damage(DROP_DAMAGE, sender)
                     }
             }
@@ -80,34 +89,35 @@ class AnvilDropEventHandler(val plugin: Plugin, val logger: Logger) : Listener {
         evt.isCancelled = true
     }
 
-    private fun spawnFallingAnvil(spawnLocation: Location, sender: Player) {
+    fun spawnFallingAnvil(spawnLocation: Location, sender: Player): FallingBlock {
         val world = spawnLocation.world
 
-        // probably when the player is dead
-        if (world == null) {
-            logger.warning("Player ${sender.name} is in no world!?")
-            return
+        return world.spawn(spawnLocation, FallingBlock::class.java) { anvil ->
+            setAnvilProperties(anvil, sender)
         }
+    }
 
-        val fallingAnvil = world.spawn(spawnLocation, FallingBlock::class.java) {
-            it.blockData = (Material.ANVIL.createBlockData() as Directional).apply {
-                facing = if (sender.facing.modZ != 0) {
-                    BlockFace.EAST
-                } else {
-                    BlockFace.SOUTH
-                }
+    fun setAnvilProperties(anvil: FallingBlock, sender: Player) {
+        val blockData = plugin.server.createBlockData(Material.ANVIL) as Directional
+
+        anvil.blockData = blockData.apply {
+            facing = if (sender.facing.modZ != 0) {
+                BlockFace.EAST
+            } else {
+                BlockFace.SOUTH
             }
-
-            it.persistentDataContainer.set(
-                NamespacedKey(plugin, senderTag),
-                PersistentDataType.STRING,
-                sender.uniqueId.toString()
-            )
         }
+
+        // Todo: extract to a generic function "setSender"
+        anvil.persistentDataContainer.set(
+            NamespacedKey(plugin, senderTag),
+            PersistentDataType.STRING,
+            sender.uniqueId.toString()
+        )
 
         // Damaged is done in the EntityChangeBlockEvent
-        fallingAnvil.setHurtEntities(false)
-        fallingAnvil.velocity = Vector(0.0, AnvilAbilityAttributes.FALL_SPEED_MODIFIER, 0.0)
+        anvil.setHurtEntities(false)
+        anvil.velocity = Vector(0.0, AnvilAbilityAttributes.FALL_SPEED_MODIFIER, 0.0)
     }
 
     private fun getSenderOf(entity: Entity): Player? {
