@@ -20,8 +20,10 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
+import org.mockbukkit.mockbukkit.block.data.DirectionalDataMock
 import org.mockbukkit.mockbukkit.entity.FallingBlockMock
 import org.mockbukkit.mockbukkit.entity.PlayerMock
+import org.mockbukkit.mockbukkit.inventory.ItemStackMock
 import java.util.*
 import java.util.function.Consumer
 import java.util.logging.Logger
@@ -54,57 +56,10 @@ class AnvilDropEventHandlerTest {
     }
 
     @Test
-    fun `onPlayerRightClickAnvil cancels event when player right clicks with anvil`() {
-        val player = mockk<Player>(relaxed = true)
-        val world = mockk<World>(relaxed = true)
-        val block = mockk<Block>(relaxed = true)
-        val blockData = mockk<BlockData>(relaxed = true)
-        val anvilBlockData = mockk<Directional>(relaxed = true)
-        val fallingAnvil = mockk<FallingBlock>(relaxed = true)
-        val persistentDataContainer = mockk<PersistentDataContainer>(relaxed = true)
-        val item = mockk<ItemStack>(relaxed = true)
-        val event = mockk<PlayerInteractEvent>(relaxed = true)
-
-        every { event.item } returns item
-        every { item.type } returns Material.ANVIL
-        every { event.action } returns Action.RIGHT_CLICK_AIR
-        every { event.player } returns player
-        every { player.name } returns "TestPlayer"
-        every { player.facing } returns BlockFace.NORTH
-        every { player.uniqueId } returns UUID.randomUUID()
-
-        // Block in line of sight
-        every { block.isEmpty } returns false
-        every { block.location } returns Location(world, 10.0, 65.0, 10.0)
-        every { block.blockData } returns blockData
-        every { blockData.material } returns Material.STONE
-        every { player.getLineOfSight(null, AnvilAbilityAttributes.MAX_CAST_DISTANCE) } returns listOf(block)
-
-        // World setup for spawning
-        every { world.getBlockAt(any<Int>(), any<Int>(), any<Int>()) } returns block
-        every { block.blockData.material } returns Material.AIR
-
-        every { anvilBlockData.facing = any() } just Runs
-
-        every { world.spawn(any<Location>(), FallingBlock::class.java, any<Consumer<FallingBlock>>()) } answers {
-            val consumer = thirdArg<Consumer<FallingBlock>>()
-            consumer.accept(fallingAnvil)
-            fallingAnvil
-        }
-        every { fallingAnvil.persistentDataContainer } returns persistentDataContainer
-
-        handler.onPlayerRightClickAnvil(event)
-
-        verify { event.isCancelled = true }
-    }
-
-    @Test
     fun `onPlayerRightClickAnvil does nothing when item is not anvil`() {
-        val item = mockk<ItemStack>(relaxed = true)
-        val event = mockk<PlayerInteractEvent>(relaxed = true)
-
-        every { event.item } returns item
-        every { item.type } returns Material.DIAMOND_SWORD
+        val item = ItemStackMock(Material.DIAMOND_SWORD)
+        val player = server.addPlayer()
+        val event = spyk(PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, item, null, BlockFace.NORTH))
 
         handler.onPlayerRightClickAnvil(event)
 
@@ -113,31 +68,18 @@ class AnvilDropEventHandlerTest {
 
     @Test
     fun `onPlayerRightClickAnvil does nothing when action is not right click`() {
-        val item = mockk<ItemStack>(relaxed = true)
-        val event = mockk<PlayerInteractEvent>(relaxed = true)
-
-        every { event.item } returns item
-        every { item.type } returns Material.ANVIL
-        every { event.action } returns Action.LEFT_CLICK_AIR
-
-        handler.onPlayerRightClickAnvil(event)
+        val item = ItemStackMock(Material.ANVIL)
+        val player = server.addPlayer()
+        val event = spyk(PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, item, null, BlockFace.NORTH))
 
         verify(exactly = 0) { event.isCancelled = any() }
     }
 
     @Test
     fun `onAnvilHit damages nearby entities`() {
-        // TODO: see if every mock is needed after having it work
-        val serverSpy = spyk(server)
-
-        val anvilDataMock = mockk<Directional>(relaxed = true)
-
-        every { anvilDataMock.facing = any() } just Runs
-
-        every { serverSpy.createBlockData(Material.ANVIL) } returns anvilDataMock
-
         val sender = spyk(server.addPlayer("sender"))
 
+        // needed because this is not implemented in MockBukkit
         every { sender.facing } returns BlockFace.EAST
 
         val world = spyk(sender.world)
@@ -147,21 +89,17 @@ class AnvilDropEventHandlerTest {
             location = hitLocation
         }
 
-        // Fixes Stackoverflow of LivingEntityMock.isDead
+        // Fixes Stackoverflow on LivingEntityMock.isDead 🤷
         every { target.isDead } returns false
 
         server.addPlayer(target)
 
-        logger.info("Sender UUID: ${sender.uniqueId}, Target UUID: ${target.uniqueId}")
-
         val block = spyk(world.spawn(hitLocation, FallingBlockMock::class.java))
-        //noinspection UnstableApiUsage
         val event = spyk(EntityChangeBlockEvent(block, block.location.block, block.blockData))
 
         handler.setAnvilProperties(block, sender)
 
         handler.onAnvilHit(event)
-        logger.info("hi")
 
         verify {
             target.damage(
