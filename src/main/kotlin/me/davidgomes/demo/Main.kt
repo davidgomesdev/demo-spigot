@@ -6,7 +6,7 @@ import me.davidgomes.demo.heroes.butcher.AnvilDropEventHandler
 import org.bukkit.plugin.java.JavaPlugin
 
 @Suppress("unused")
-class Main : JavaPlugin() {
+open class Main : JavaPlugin() {
     override fun onEnable() {
         val arenaManager = ArenaManager(logger)
 

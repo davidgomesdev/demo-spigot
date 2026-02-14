@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class ArenaManagerTest {
 
     private fun createArenaManager(): ArenaManager {
-        return ArenaManager(Logger.getLogger("TestLogger"))
+        return ArenaManager(Logger.getLogger("ArenaManagerTest"))
     }
 
     @Test
