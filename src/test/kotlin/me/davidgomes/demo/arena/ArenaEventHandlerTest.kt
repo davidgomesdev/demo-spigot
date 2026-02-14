@@ -54,7 +54,7 @@ class ArenaEventHandlerTest {
 
         val item = player.inventory.getItem(0)
 
-        assertEquals(Material.CLOCK, item?.type)
+        assertEquals(Material.DIAMOND_SWORD, item?.type)
         assertEquals(Component.text("Join Arena"), item?.itemMeta?.customName())
     }
 

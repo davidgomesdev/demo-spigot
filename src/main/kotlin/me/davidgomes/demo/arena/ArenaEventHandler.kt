@@ -1,26 +1,23 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.isRightClick
+import me.davidgomes.demo.items.InteractableItem
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
 import org.bukkit.Material
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.Action
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import org.bukkit.inventory.ItemStack
 
 // TODO: remove arena join item when player joins arena, and give it back when they leave
 class ArenaEventHandler(val arenaManager: ArenaManager) : Listener {
 
-    val joinItemName = Component.text("Join Arena")
-
-    // TODO: make a class for interactable items
-    val arenaJoinItem = ItemStack(Material.CLOCK).apply {
-        editMeta { it.customName(joinItemName) }
-    }
+    val arenaJoinItem = InteractableItem(
+        material = Material.DIAMOND_SWORD,
+        name = "Join Arena"
+    )
 
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
@@ -38,26 +35,15 @@ class ArenaEventHandler(val arenaManager: ArenaManager) : Listener {
 
     @EventHandler
     fun onPlayerDropItem(event: PlayerDropItemEvent) {
-        val item = event.itemDrop.itemStack
-
-        val customName = item.itemMeta?.customName() ?: return
-        if (customName !is TextComponent) return
-
-        if (!(item.type == arenaJoinItem.type && customName == joinItemName)) return
+        if (!(arenaJoinItem isTheSame event.itemDrop)) return
 
         event.isCancelled = true
     }
 
     @EventHandler
     fun onPlayerInteract(event: PlayerInteractEvent) {
-        if (event.action != Action.RIGHT_CLICK_AIR && event.action != Action.RIGHT_CLICK_BLOCK) return
-
-        val item = event.item ?: return
-
-        val customName = item.itemMeta?.customName() ?: return
-        if (customName !is TextComponent) return
-
-        if (!(item.type == arenaJoinItem.type && customName == joinItemName)) return
+        if (!event.isRightClick()) return
+        if (event.item != arenaJoinItem) return
 
         event.isCancelled = true
 
