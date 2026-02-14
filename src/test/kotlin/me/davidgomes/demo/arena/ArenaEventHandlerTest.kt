@@ -1,7 +1,5 @@
 package me.davidgomes.demo.arena
 
-import org.mockbukkit.mockbukkit.MockBukkit
-import org.mockbukkit.mockbukkit.ServerMock
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
@@ -15,9 +13,11 @@ import org.bukkit.inventory.ItemStack
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockbukkit.mockbukkit.MockBukkit
+import org.mockbukkit.mockbukkit.ServerMock
 import org.mockbukkit.mockbukkit.block.BlockMock
 import org.mockbukkit.mockbukkit.entity.ItemMock
-import java.util.UUID
+import java.util.*
 import java.util.logging.Logger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -26,7 +26,6 @@ import kotlin.test.assertTrue
 // Events are "Unstable API", but it's easier than mocking
 @Suppress("UnstableApiUsage")
 class ArenaEventHandlerTest {
-
     private lateinit var server: ServerMock
     private lateinit var arenaManager: ArenaManager
     private lateinit var handler: ArenaEventHandler
@@ -104,13 +103,14 @@ class ArenaEventHandlerTest {
         val player = server.addPlayer()
         player.inventory.setItemInMainHand(handler.arenaJoinItem)
 
-        val event = PlayerInteractEvent(
-            player,
-            Action.RIGHT_CLICK_BLOCK,
-            handler.arenaJoinItem,
-            BlockMock(Material.ACACIA_PLANKS, player.location),
-            BlockFace.EAST
-        )
+        val event =
+            PlayerInteractEvent(
+                player,
+                Action.RIGHT_CLICK_BLOCK,
+                handler.arenaJoinItem,
+                BlockMock(Material.ACACIA_PLANKS, player.location),
+                BlockFace.EAST,
+            )
 
         handler.onPlayerInteract(event)
 

@@ -10,7 +10,6 @@ class InteractableItem(
     val material: Material,
     val name: String,
 ) : ItemStack(material) {
-
     init {
         editMeta { it.customName(Component.text(name)) }
     }
@@ -22,12 +21,9 @@ class InteractableItem(
     infix fun isTheSame(item: Item?) = this isTheSame item?.itemStack
 
     infix fun isTheSame(itemStack: ItemStack?): Boolean {
-        println("Comparing $this with $itemStack")
         val customName = itemStack?.itemMeta?.customName() ?: return false
-        println("has custom name: $customName")
 
         if (customName !is TextComponent) return false
-        println("custom name is text component: ${customName.content()}")
 
         return itemStack.type == material && customName.content() == name
     }

@@ -12,12 +12,14 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 
 // TODO: remove arena join item when player joins arena, and give it back when they leave
-class ArenaEventHandler(val arenaManager: ArenaManager) : Listener {
-
-    val arenaJoinItem = InteractableItem(
-        material = Material.DIAMOND_SWORD,
-        name = "Join Arena"
-    )
+class ArenaEventHandler(
+    val arenaManager: ArenaManager,
+) : Listener {
+    val arenaJoinItem =
+        InteractableItem(
+            material = Material.DIAMOND_SWORD,
+            name = "Join Arena",
+        )
 
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {

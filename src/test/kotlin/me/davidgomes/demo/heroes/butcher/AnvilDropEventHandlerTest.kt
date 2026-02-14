@@ -1,12 +1,14 @@
 package me.davidgomes.demo.heroes.butcher
 
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import me.davidgomes.demo.Main
 import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.BlockData
-import org.bukkit.block.data.Directional
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.FallingBlock
@@ -14,18 +16,14 @@ import org.bukkit.entity.Player
 import org.bukkit.event.block.Action
 import org.bukkit.event.entity.EntityChangeBlockEvent
 import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
-import org.mockbukkit.mockbukkit.block.data.DirectionalDataMock
 import org.mockbukkit.mockbukkit.entity.FallingBlockMock
 import org.mockbukkit.mockbukkit.entity.PlayerMock
 import org.mockbukkit.mockbukkit.inventory.ItemStackMock
-import java.util.*
-import java.util.function.Consumer
 import java.util.logging.Logger
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -34,7 +32,6 @@ import kotlin.test.Test
 // Events are "Unstable API", but it's easier than mocking
 @Suppress("UnstableApiUsage")
 class AnvilDropEventHandlerTest {
-
     private lateinit var server: ServerMock
     private lateinit var plugin: Plugin
     private lateinit var logger: Logger
@@ -85,9 +82,10 @@ class AnvilDropEventHandlerTest {
         val world = spyk(sender.world)
         val hitLocation = Location(world, 10.0, 65.0, 10.0)
 
-        val target = spyk(PlayerMock(server, "target")).apply {
-            location = hitLocation
-        }
+        val target =
+            spyk(PlayerMock(server, "target")).apply {
+                location = hitLocation
+            }
 
         // Fixes Stackoverflow on LivingEntityMock.isDead 🤷
         every { target.isDead } returns false
@@ -104,7 +102,7 @@ class AnvilDropEventHandlerTest {
         verify {
             target.damage(
                 AnvilAbilityAttributes.Landing.DROP_DAMAGE,
-                match<Entity> { it.name == "sender" }
+                match<Entity> { it.name == "sender" },
             )
         }
         verify { world.playEffect(hitLocation, Effect.ANVIL_LAND, null) }
