@@ -15,8 +15,10 @@ class MapCreationManager(
     val mapManager: MapManager,
     val sessions: MutableMap<Player, MapCreationSession> = mutableMapOf(),
 ) {
-
-    fun createSession(creator: Player, mapName: String): MapCreationSession {
+    fun createSession(
+        creator: Player,
+        mapName: String,
+    ): MapCreationSession {
         val session =
             if (mapManager existsMapWithName mapName) {
                 creator.sendMessage(EDITING_EXISTING_MAP)
@@ -42,6 +44,7 @@ class MapCreationManager(
     }
 
     infix fun isNotInSession(player: Player): Boolean = !isInSession(player)
+
     infix fun isInSession(player: Player): Boolean = sessions.containsKey(player)
 
     fun getSession(creator: Player): MapCreationSession? = sessions[creator]
@@ -89,7 +92,10 @@ class MapCreationManager(
     ) {
         fun isComplete(): Boolean = spawns.values.none { it == null }
 
-        fun setSpawn(team: Team, location: Location) {
+        fun setSpawn(
+            team: Team,
+            location: Location,
+        ) {
             spawns[team] = location
         }
 

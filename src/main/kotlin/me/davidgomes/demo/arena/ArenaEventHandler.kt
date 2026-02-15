@@ -18,7 +18,6 @@ class ArenaEventHandler(
     val logger: Logger,
     val arenaManager: ArenaManager,
 ) : Listener {
-
     val arenaJoinItem =
         InteractableItem(
             material = Material.DIAMOND_SWORD,

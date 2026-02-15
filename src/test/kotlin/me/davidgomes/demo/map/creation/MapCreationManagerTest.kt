@@ -142,7 +142,6 @@ class MapCreationManagerTest {
 
     @Nested
     inner class FinishSession {
-
         @Test
         fun `returns null when player has no session`() {
             val player = server.addPlayer()
@@ -248,4 +247,3 @@ class MapCreationManagerTest {
         }
     }
 }
-

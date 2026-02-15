@@ -43,9 +43,10 @@ class GameMapTest {
 
     @Test
     fun `deserialize throws when name is missing`() {
-        val serialized = mapOf<String, Any>(
-            "teamSpawns" to emptyMap<String, Any>()
-        )
+        val serialized =
+            mapOf<String, Any>(
+                "teamSpawns" to emptyMap<String, Any>(),
+            )
 
         assertFailsWith<InvalidConfigurationException> {
             GameMap.deserialize(serialized)
@@ -54,9 +55,10 @@ class GameMapTest {
 
     @Test
     fun `deserialize throws when teamSpawns is missing`() {
-        val serialized = mapOf<String, Any>(
-            "name" to "test_map"
-        )
+        val serialized =
+            mapOf<String, Any>(
+                "name" to "test_map",
+            )
 
         assertFailsWith<InvalidConfigurationException> {
             GameMap.deserialize(serialized)
@@ -70,10 +72,11 @@ class GameMapTest {
         val blueSpawn = Location(world, 30.0, 65.0, 40.0)
         val teamSpawns = mapOf("Yellow" to yellowSpawn.serialize(), "Blue" to blueSpawn.serialize())
 
-        val serialized = mapOf(
-            "name" to "test_map",
-            "teamSpawns" to teamSpawns
-        )
+        val serialized =
+            mapOf(
+                "name" to "test_map",
+                "teamSpawns" to teamSpawns,
+            )
 
         val gameMap = GameMap.deserialize(serialized)
 
@@ -82,4 +85,3 @@ class GameMapTest {
         assertEquals(blueSpawn, gameMap.teamSpawns[Team.Blue])
     }
 }
-

@@ -6,7 +6,7 @@ import java.util.logging.Logger
 
 class MapManager(
     val logger: Logger,
-    val config: ExYamlConfiguration
+    val config: ExYamlConfiguration,
 ) {
     // Name to GameMap
     private var maps: Map<String, GameMap>
@@ -24,8 +24,9 @@ class MapManager(
     @Suppress("UNCHECKED_CAST")
     fun reloadMaps(): Map<String, GameMap> {
         config.reload()
-        maps = (config.getList("maps", listOf<GameMap>()) as List<GameMap>)
-            .associateBy { it.name }
+        maps =
+            (config.getList("maps", listOf<GameMap>()) as List<GameMap>)
+                .associateBy { it.name }
 
         logger.info("Reloaded maps (${maps.size} maps loaded)")
 
