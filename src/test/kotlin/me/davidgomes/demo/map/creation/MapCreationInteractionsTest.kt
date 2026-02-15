@@ -6,6 +6,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
 import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.createPlayer
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.CANNOT_FINISH_YET_MESSAGE
 import me.davidgomes.demo.messages.NOT_IN_SESSION_MESSAGE
@@ -154,7 +155,7 @@ class MapCreationInteractionsTest {
 
     @Test
     fun `onPlayerQuit removes player session`() {
-        val player = server.addPlayer()
+        val player = createPlayer(server)
         every { mapManager existsMapWithName any() } returns false
         manager.createSession(player, "test_map")
 
@@ -167,7 +168,7 @@ class MapCreationInteractionsTest {
 
     @Test
     fun `onPlayerDeath removes player session`() {
-        val player = server.addPlayer()
+        val player = createPlayer(server)
         every { mapManager existsMapWithName any() } returns false
         manager.createSession(player, "test_map")
 

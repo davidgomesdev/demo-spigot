@@ -18,7 +18,7 @@ open class Main : JavaPlugin() {
     override fun onEnable() {
         ConfigurationSerialization.registerClass(GameMap::class.java)
 
-        val arenaManager = ArenaManager(logger)
+        val arenaManager = ArenaManager(this, logger)
 
         val mapManager = MapManager(logger, getConfigFile("maps.yml"))
         val mapCreationManager = MapCreationManager(logger, mapManager)

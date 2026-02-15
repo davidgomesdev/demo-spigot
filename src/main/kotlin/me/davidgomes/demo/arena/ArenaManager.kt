@@ -1,9 +1,14 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.heroes.getSenderOf
 import me.davidgomes.demo.items.InteractableItem
+import me.davidgomes.demo.messages.ARENA_STARTED
+import me.davidgomes.demo.messages.YOU_LOST
+import me.davidgomes.demo.messages.YOU_WON
 import org.bukkit.Material
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
-import java.util.*
+import org.bukkit.plugin.Plugin
 import java.util.logging.Logger
 
 val arenaJoinItem =
@@ -12,15 +17,42 @@ val arenaJoinItem =
         name = "Join Arena",
     )
 
-// TODO: NOT THREAD-SAFE, needs a mutex
+val arenaStartItem =
+    InteractableItem(
+        material = Material.EMERALD,
+        name = "Use to start Arena",
+    )
+
+// TODO: NOT THREAD-SAFE, needs a mutex on write
 class ArenaManager(
+    private val plugin: Plugin,
     private val logger: Logger,
-    private val players: MutableMap<Team, MutableList<UUID>> =
+    /**
+     * TODO: the best way to have this compatible with FFA,
+     *      is probably to store only a list of players and then assign them to teams (in TDM) when the game starts, in ArenaState
+     *      that also fixes one team getting more players when one leaves
+     */
+    private val players: MutableMap<Team, MutableList<Player>> =
         Team.entries
-            .associateWith { mutableListOf<UUID>() }
+            .associateWith { mutableListOf<Player>() }
             .toMutableMap(),
+    // Only one arena state, as we aren't many anyway :P
+    private var state: ArenaState = ArenaState.Lobby,
 ) {
-    fun addItemJoinArena(player: Player) {
+    fun startArena(gameType: GameType) {
+        state = ArenaState.new(gameType)
+        players.values.flatten().forEach {
+            it.inventory.clear()
+            it.sendMessage(ARENA_STARTED)
+        }
+    }
+
+    fun isReadyToStart(): Boolean = when (state) {
+        is ArenaState.Lobby -> players.values.all { it.isNotEmpty() }
+        else -> false
+    }
+
+    fun addItemToJoinArena(player: Player) {
         player.inventory.apply {
             clear()
             setItem(0, arenaJoinItem)
@@ -28,11 +60,11 @@ class ArenaManager(
     }
 
     fun joinArena(player: Player): Team {
-        val playerId = player.uniqueId
         val team = players.minBy { it.value.size }.key
 
-        players[team]?.add(playerId) ?: players.put(team, mutableListOf(playerId))
+        players[team]?.add(player) ?: players.put(team, mutableListOf(player))
         player.inventory.clear()
+        player.inventory.setItem(0, arenaStartItem)
 
         return team
     }
@@ -41,35 +73,91 @@ class ArenaManager(
      * If the player is not in any team, it logs a warning and does nothing.
      */
     fun leaveArena(player: Player) {
-        val playerId = player.uniqueId
-        val team = getTeam(playerId)
+        val team = getTeam(player)
 
         if (team == null) {
-            logger.warning("Tried removing player with ID $playerId but they are not in any team")
+            logger.warning("Tried removing player '${player.name}' but they are not in any team")
             return
         }
 
-        players[team]?.remove(playerId)
-        addItemJoinArena(player)
+        players[team]?.remove(player)
+        addItemToJoinArena(player)
     }
 
-    fun isInArena(playerId: UUID): Boolean = getTeam(playerId) != null
+    fun getState(): ArenaState = state
 
-    fun getTeam(playerId: UUID): Team? = Team.entries.firstOrNull { players[it]?.contains(playerId) == true }
+    fun isMatchOnGoing(): Boolean = state.isOnGoing
+
+    infix fun isInArena(player: Player): Boolean = getTeam(player) != null
+
+    fun getTeam(player: Player): Team? = Team.entries.firstOrNull { players[it]?.contains(player) == true }
 
     fun getTeamSize(team: Team): Int = players[team]?.size ?: 0
 
-    fun getPlayersInTeam(team: Team): List<UUID> = players[team]?.toList() ?: emptyList()
-}
+    fun getPlayersInTeam(team: Team): List<Player> = players[team]?.toList() ?: emptyList()
 
-enum class Team(
-    val spawnItemMaterial: Material,
-) {
-    Yellow(Material.YELLOW_CANDLE),
-    Blue(Material.BLUE_CANDLE),
-    ;
+    fun onPlayerKilledByEntity(deadPlayer: Player, executor: Entity) {
+        val sender = getSenderOf(plugin, executor)
 
-    companion object {
-        val count = entries.count()
+        if (sender == null) {
+            logger.warning(
+                "Player '${deadPlayer.name}' was killed by an entity" +
+                        " (${executor.type}) in an arena match, but the sender could not be identified, ignoring"
+            )
+            return
+        }
+
+        logger.info("Player '${deadPlayer.name}' was killed by ${executor.type} in the arena match")
+
+        onPlayerKilledByPlayer(deadPlayer, sender)
+    }
+
+    fun onPlayerKilledByPlayer(deadPlayer: Player, executor: Player) {
+        if (!isMatchOnGoing()) {
+            logger.warning(
+                "Player '${executor.name}' killed player '${deadPlayer.name}' " +
+                        "but the match is not on going, this should be avoided"
+            )
+            return
+        }
+
+        val deathTeam = getTeam(deadPlayer) ?: return
+        val executorTeam = getTeam(executor) ?: return
+
+        if (deadPlayer == executor) {
+            logger.warning("Player '${deadPlayer.name}' killed themselves, ignoring")
+            return
+        }
+
+        if (deathTeam == executorTeam) {
+            logger.warning("Player '${executor.name}' killed a teammate, ignoring")
+            return
+        }
+
+        logger.info("Player '${executor.name}' killed player '${deadPlayer.name}' in an arena match")
+
+        when (val currentState = state) {
+            is ArenaState.OnGoingTeamDeathMatch -> {
+                val teamWinner = currentState.scoreKill(executorTeam) ?: return
+
+                logger.info("Team '${teamWinner.name}' won the TDM arena")
+                sendFinishMatchMessage(teamWinner)
+                state = ArenaState.EndedTeamDeathMatch(teamWinner)
+            }
+
+            else -> throw NotImplementedError(
+                "Game type ${currentState::class} not yet implemented"
+            )
+        }
+    }
+
+    private fun sendFinishMatchMessage(executorTeam: Team) {
+        players[executorTeam]!!.forEach { player -> player.sendMessage(YOU_WON) }
+        players.entries
+            .filterNot { it.key != executorTeam }
+            .forEach { (_, teamPlayers) ->
+                teamPlayers.forEach { player -> player.sendMessage(YOU_LOST) }
+            }
     }
 }
+
