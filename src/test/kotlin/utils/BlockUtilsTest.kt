@@ -10,7 +10,6 @@ import org.mockbukkit.mockbukkit.world.WorldMock
 import kotlin.test.*
 
 class BlockUtilsTest {
-
     lateinit var server: ServerMock
     lateinit var world: WorldMock
 
@@ -118,4 +117,3 @@ class BlockUtilsTest {
         assertTrue(hasBlocksBelow(location, 5))
     }
 }
-

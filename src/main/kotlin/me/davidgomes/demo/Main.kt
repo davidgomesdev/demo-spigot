@@ -7,6 +7,7 @@ import me.davidgomes.demo.heroes.butcher.AnvilDropEventHandler
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.map.creation.MapCreationCommands
+import me.davidgomes.demo.map.creation.MapCreationInteractions
 import me.davidgomes.demo.map.creation.MapCreationManager
 import org.bukkit.configuration.serialization.ConfigurationSerialization
 import org.bukkit.plugin.java.JavaPlugin
@@ -26,6 +27,7 @@ open class Main : JavaPlugin() {
 
         val commandsToRegister = arrayOf(mapCreationCommands.createMap)
 
+        server.pluginManager.registerEvents(MapCreationInteractions(mapCreationManager), this)
         server.pluginManager.registerEvents(AnvilDropEventHandler(this, logger), this)
         server.pluginManager.registerEvents(ArenaEventHandler(logger, arenaManager), this)
 
