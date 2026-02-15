@@ -6,7 +6,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 
-class InteractableItem(
+class GameItem(
     val material: Material,
     val name: String,
 ) : ItemStack(material) {

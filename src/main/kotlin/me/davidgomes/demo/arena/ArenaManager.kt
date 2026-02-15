@@ -1,32 +1,19 @@
 package me.davidgomes.demo.arena
 
 import me.davidgomes.demo.heroes.getSenderOf
-import me.davidgomes.demo.items.InteractableItem
 import me.davidgomes.demo.messages.ARENA_STARTED
 import me.davidgomes.demo.messages.YOU_LOST
 import me.davidgomes.demo.messages.YOU_WON
-import org.bukkit.Material
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 import java.util.logging.Logger
 
-val arenaJoinItem =
-    InteractableItem(
-        material = Material.DIAMOND_SWORD,
-        name = "Join Arena",
-    )
-
-val arenaStartItem =
-    InteractableItem(
-        material = Material.EMERALD,
-        name = "Use to start Arena",
-    )
-
 // TODO: NOT THREAD-SAFE, needs a mutex on write
 class ArenaManager(
     private val plugin: Plugin,
     private val logger: Logger,
+    private val heroManager: HeroManager,
     /**
      * TODO: the best way to have this compatible with FFA,
      *      is probably to store only a list of players and then assign them to teams (in TDM) when the game starts, in ArenaState
@@ -55,7 +42,7 @@ class ArenaManager(
     fun addItemToJoinArena(player: Player) {
         player.inventory.apply {
             clear()
-            setItem(0, arenaJoinItem)
+            setItem(0, ArenaItems.join)
         }
     }
 
@@ -64,7 +51,7 @@ class ArenaManager(
 
         players[team]?.add(player) ?: players.put(team, mutableListOf(player))
         player.inventory.clear()
-        player.inventory.setItem(0, arenaStartItem)
+        player.inventory.setItem(0, ArenaItems.start)
 
         return team
     }
