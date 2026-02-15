@@ -41,7 +41,8 @@ class MapCreationManager(
         return session
     }
 
-    infix fun isNotInSession(player: Player): Boolean = !sessions.containsKey(player)
+    infix fun isNotInSession(player: Player): Boolean = !isInSession(player)
+    infix fun isInSession(player: Player): Boolean = sessions.containsKey(player)
 
     fun getSession(creator: Player): MapCreationSession? = sessions[creator]
 
