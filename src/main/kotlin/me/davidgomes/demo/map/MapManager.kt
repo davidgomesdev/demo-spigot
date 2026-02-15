@@ -8,18 +8,24 @@ class MapManager(
     val logger: Logger,
     val config: ExYamlConfiguration
 ) {
-    var maps: List<GameMap>
+    // Name to GameMap
+    private var maps: Map<String, GameMap>
 
     init {
         maps = reloadMaps()
     }
 
-    infix fun existsMapWithName(name: String): Boolean = maps.any { it.name == name }
+    infix fun existsMapWithName(name: String): Boolean = maps.containsKey(name)
+
+    fun getMapByName(name: String): GameMap? = maps[name]
+
+    fun getAllMaps(): Collection<GameMap> = maps.values
 
     @Suppress("UNCHECKED_CAST")
-    fun reloadMaps(): List<GameMap> {
+    fun reloadMaps(): Map<String, GameMap> {
         config.reload()
-        maps = config.getList("maps", listOf<GameMap>()) as List<GameMap>
+        maps = (config.getList("maps", listOf<GameMap>()) as List<GameMap>)
+            .associateBy { it.name }
 
         logger.info("Reloaded maps (${maps.size} maps loaded)")
 
@@ -29,7 +35,7 @@ class MapManager(
     fun addMap(creationSession: MapCreationManager.MapCreationSession): GameMap {
         val newMap = creationSession.toGameMap()
 
-        config.setAndSave("maps", (maps + newMap))
+        config.setAndSave("maps", (maps.values + newMap))
         logger.info("Added map '${creationSession.mapName}'")
 
         reloadMaps()

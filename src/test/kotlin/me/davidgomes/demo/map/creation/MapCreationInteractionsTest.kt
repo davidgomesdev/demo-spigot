@@ -52,7 +52,7 @@ class MapCreationInteractionsTest {
     }
 
     @Test
-    fun `onPlayerSetSpawn does alerts when player is trying to set spawn but is not in session`() {
+    fun `onPlayerSetSpawn alerts when player is trying to set spawn but is not in session`() {
         val player = spyk(server.addPlayer())
         val item = MapCreationItems.spawnPickers[Team.Yellow]!!
         val event = spyk(PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, item, null, BlockFace.NORTH))
