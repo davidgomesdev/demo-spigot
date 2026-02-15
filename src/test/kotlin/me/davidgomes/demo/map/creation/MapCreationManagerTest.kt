@@ -4,6 +4,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
 import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.createPlayer
 import me.davidgomes.demo.createTempConfig
 import me.davidgomes.demo.map.MapManager
 import org.bukkit.GameMode
@@ -74,7 +75,7 @@ class MapCreationManagerTest {
     inner class CreationSession {
         @Test
         fun `returns existing map when map name already exists`() {
-            val player = server.addPlayer()
+            val player = createPlayer(server)
 
             manager.createSession(player, "new_map").also { session ->
                 Team.entries.associateWith { player.location }.forEach { (team, location) ->
@@ -120,7 +121,7 @@ class MapCreationManagerTest {
     inner class AbortSession {
         @Test
         fun `removes player from sessions and clears inventory`() {
-            val player = spyk(server.addPlayer())
+            val player = createPlayer(server)
 
             manager.createSession(player, "test_map")
             manager.abortSession(player)
@@ -164,7 +165,7 @@ class MapCreationManagerTest {
         @Test
         fun `completes when all spawns are set`() {
             val world = server.addSimpleWorld("test_world")
-            val player = spyk(server.addPlayer())
+            val player = createPlayer(server)
 
             manager.createSession(player, "test_map")
 

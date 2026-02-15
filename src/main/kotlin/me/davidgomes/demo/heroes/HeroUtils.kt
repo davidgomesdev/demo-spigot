@@ -11,10 +11,10 @@ private const val SENDER_TAG = "sender"
 
 fun setEntitySender(
     plugin: Plugin,
-    anvil: Entity,
+    entity: Entity,
     sender: Player,
 ) {
-    anvil.persistentDataContainer.set(
+    entity.persistentDataContainer.set(
         NamespacedKey(plugin, SENDER_TAG),
         PersistentDataType.STRING,
         sender.uniqueId.toString(),
@@ -33,6 +33,7 @@ fun getSenderOf(
     val sender = plugin.server.getPlayer(UUID.fromString(senderId))
 
     if (sender == null) {
+        plugin.logger.warning("Could not find sender of entity '${entity.name}' with id '$senderId', maybe they left the server?")
         return null
     }
 

@@ -1,5 +1,6 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.Main
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
@@ -35,7 +36,7 @@ class ArenaEventHandlerTest {
         val logger = Logger.getLogger("ArenaEventHandlerTest")
 
         server = MockBukkit.mock()
-        arenaManager = ArenaManager(logger)
+        arenaManager = ArenaManager(MockBukkit.load(Main::class.java), logger)
         handler = ArenaEventHandler(logger, arenaManager)
     }
 
@@ -62,26 +63,26 @@ class ArenaEventHandlerTest {
         val player = server.addPlayer()
 
         arenaManager.joinArena(player)
-        assertTrue(arenaManager.isInArena(player.uniqueId))
+        assertTrue(arenaManager.isInArena(player))
 
         val event = PlayerQuitEvent(player, Component.text("left"), PlayerQuitEvent.QuitReason.DISCONNECTED)
 
         handler.onPlayerQuit(event)
 
-        assertFalse(arenaManager.isInArena(player.uniqueId))
+        assertFalse(arenaManager.isInArena(player))
     }
 
     @Test
     fun `onPlayerQuit does not fail when the player is not in the arena`() {
         val player = server.addPlayer()
 
-        assertFalse(arenaManager.isInArena(player.uniqueId))
+        assertFalse(arenaManager.isInArena(player))
 
         val event = PlayerQuitEvent(player, Component.text("left"), PlayerQuitEvent.QuitReason.DISCONNECTED)
 
         handler.onPlayerQuit(event)
 
-        assertFalse(arenaManager.isInArena(player.uniqueId))
+        assertFalse(arenaManager.isInArena(player))
     }
 
     @Test
@@ -91,9 +92,9 @@ class ArenaEventHandlerTest {
 
         val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, arenaJoinItem, null, BlockFace.SELF)
 
-        handler.onPlayerInteract(event)
+        handler.onPlayerInteractWithArenaJoin(event)
 
-        assertTrue(arenaManager.isInArena(player.uniqueId))
+        assertTrue(arenaManager.isInArena(player))
         assertEquals(Event.Result.DENY, event.useInteractedBlock())
         assertEquals(Event.Result.DENY, event.useItemInHand())
     }
@@ -112,9 +113,9 @@ class ArenaEventHandlerTest {
                 BlockFace.EAST,
             )
 
-        handler.onPlayerInteract(event)
+        handler.onPlayerInteractWithArenaJoin(event)
 
-        assertTrue(arenaManager.isInArena(player.uniqueId))
+        assertTrue(arenaManager.isInArena(player))
         assertEquals(Event.Result.DENY, event.useInteractedBlock())
         assertEquals(Event.Result.DENY, event.useItemInHand())
     }
@@ -126,9 +127,9 @@ class ArenaEventHandlerTest {
 
         val event = PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, arenaJoinItem, null, BlockFace.SELF)
 
-        handler.onPlayerInteract(event)
+        handler.onPlayerInteractWithArenaJoin(event)
 
-        assertFalse(arenaManager.isInArena(player.uniqueId))
+        assertFalse(arenaManager.isInArena(player))
     }
 
     @Test
@@ -140,9 +141,9 @@ class ArenaEventHandlerTest {
 
         val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, arenaJoinItem, null, BlockFace.SELF)
 
-        handler.onPlayerInteract(event)
+        handler.onPlayerInteractWithArenaJoin(event)
 
-        assertTrue(arenaManager.isInArena(player.uniqueId))
+        assertTrue(arenaManager.isInArena(player))
         assertEquals(Event.Result.DENY, event.useInteractedBlock())
         assertEquals(Event.Result.DENY, event.useItemInHand())
     }
@@ -156,9 +157,9 @@ class ArenaEventHandlerTest {
 
         val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, wrongItem, null, BlockFace.SELF)
 
-        handler.onPlayerInteract(event)
+        handler.onPlayerInteractWithArenaJoin(event)
 
-        assertFalse(arenaManager.isInArena(player.uniqueId))
+        assertFalse(arenaManager.isInArena(player))
     }
 
     @Test
@@ -166,9 +167,9 @@ class ArenaEventHandlerTest {
         val player = server.addPlayer()
         val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, null, null, BlockFace.SELF)
 
-        handler.onPlayerInteract(event)
+        handler.onPlayerInteractWithArenaJoin(event)
 
-        assertFalse(arenaManager.isInArena(player.uniqueId))
+        assertFalse(arenaManager.isInArena(player))
     }
 
     @Test
