@@ -4,16 +4,17 @@ import me.davidgomes.demo.Main
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
+import org.bukkit.damage.DamageSource
+import org.bukkit.damage.DamageType
 import org.bukkit.event.Event
 import org.bukkit.event.block.Action
+import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.inventory.ItemStack
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
 import org.mockbukkit.mockbukkit.block.BlockMock
@@ -22,6 +23,7 @@ import java.util.*
 import java.util.logging.Logger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 // Events are "Unstable API", but it's easier than mocking
@@ -197,5 +199,185 @@ class ArenaEventHandlerTest {
         handler.onPlayerDropItem(event)
 
         assertFalse(event.isCancelled)
+    }
+
+    @Nested
+    inner class Match {
+        @Test
+        fun `onPlayerInteractWithArenaStart does nothing for left click`() {
+            val player = server.addPlayer()
+            arenaManager.joinArena(player)
+            player.inventory.setItemInMainHand(arenaStartItem)
+
+            val event = PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, arenaStartItem, null, BlockFace.SELF)
+
+            handler.onPlayerInteractWithArenaStart(event)
+
+            assertFalse(arenaManager.isMatchOnGoing())
+        }
+
+        @Test
+        fun `onPlayerInteractWithArenaStart does nothing for wrong item`() {
+            val player = server.addPlayer()
+
+            arenaManager.joinArena(player)
+            arenaManager.joinArena(server.addPlayer())
+
+            val wrongItem = ItemStack(Material.STONE)
+            player.inventory.setItemInMainHand(wrongItem)
+
+            val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, wrongItem, null, BlockFace.SELF)
+
+            handler.onPlayerInteractWithArenaStart(event)
+
+            assertFalse(arenaManager.isMatchOnGoing())
+        }
+
+        @Test
+        fun `onPlayerInteractWithArenaStart does nothing when player is not in arena`() {
+            val player = server.addPlayer()
+
+            player.inventory.setItemInMainHand(arenaStartItem)
+
+            val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, arenaStartItem, null, BlockFace.SELF)
+
+            handler.onPlayerInteractWithArenaStart(event)
+
+            assertFalse(arenaManager.isMatchOnGoing())
+            assertEquals(Event.Result.DENY, event.useInteractedBlock())
+            assertEquals(Event.Result.DENY, event.useItemInHand())
+        }
+
+        @Test
+        fun `onPlayerInteractWithArenaStart does nothing when not enough players`() {
+            val player = server.addPlayer()
+
+            arenaManager.joinArena(player)
+
+            player.inventory.setItemInMainHand(arenaStartItem)
+
+            val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, arenaStartItem, null, BlockFace.SELF)
+
+            handler.onPlayerInteractWithArenaStart(event)
+
+            assertFalse(arenaManager.isMatchOnGoing())
+            assertEquals(Event.Result.DENY, event.useInteractedBlock())
+            assertEquals(Event.Result.DENY, event.useItemInHand())
+        }
+
+        @Test
+        fun `onPlayerInteractWithArenaStart starts arena when conditions are met`() {
+            val player1 = server.addPlayer()
+            val player2 = server.addPlayer()
+            arenaManager.joinArena(player1)
+            arenaManager.joinArena(player2)
+            player1.inventory.setItemInMainHand(arenaStartItem)
+
+            val event = PlayerInteractEvent(player1, Action.RIGHT_CLICK_AIR, arenaStartItem, null, BlockFace.SELF)
+
+            handler.onPlayerInteractWithArenaStart(event)
+
+            assertTrue(arenaManager.isMatchOnGoing())
+            assertEquals(Event.Result.DENY, event.useInteractedBlock())
+            assertEquals(Event.Result.DENY, event.useItemInHand())
+        }
+
+        @Test
+        fun `onPlayerDeath does nothing when player is not in arena`() {
+            val player = server.addPlayer()
+            val killer = server.addPlayer()
+
+            val event = PlayerDeathEvent(
+                player,
+                DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
+                emptyList<ItemStack>(),
+                0,
+                Component.text(""),
+                false
+            )
+
+            assertDoesNotThrow {
+                handler.onPlayerDeath(event)
+            }
+            assertFalse(arenaManager.isMatchOnGoing())
+        }
+
+        @Test
+        fun `onPlayerDeath does nothing when match is not ongoing`() {
+            val player = server.addPlayer()
+            val killer = server.addPlayer()
+
+            arenaManager.joinArena(player)
+            arenaManager.joinArena(killer)
+
+            assertFalse(arenaManager.isMatchOnGoing())
+
+            val event = PlayerDeathEvent(
+                player,
+                DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
+                emptyList<ItemStack>(),
+                0,
+                Component.text(""),
+                false
+            )
+
+            assertDoesNotThrow {
+                handler.onPlayerDeath(event)
+            }
+            assertFalse(arenaManager.isMatchOnGoing())
+        }
+
+        @Test
+        fun `onPlayerDeath records kill when player killed by another player`() {
+            val victim = server.addPlayer()
+            val killer = server.addPlayer()
+
+            arenaManager.joinArena(victim)
+            arenaManager.joinArena(killer)
+            arenaManager.startArena(GameType.TeamDeathMatch)
+
+            val killerTeam = arenaManager.getTeam(killer)!!
+            val stateBefore = arenaManager.getState() as ArenaState.OnGoingTeamDeathMatch
+
+            stateBefore.scoreboard.values.forEach { assertEquals(0, it.get()) }
+
+            val event = PlayerDeathEvent(
+                victim,
+                DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
+                emptyList<ItemStack>(),
+                0,
+                Component.text(""),
+                false
+            )
+
+            handler.onPlayerDeath(event)
+
+            val stateAfter = assertIs<ArenaState.OnGoingTeamDeathMatch>(arenaManager.getState())
+
+            assertEquals(1, stateAfter.scoreboard[killerTeam]?.get())
+        }
+
+        @Test
+        fun `onPlayerDeath does nothing when damage source has no causing entity`() {
+            val victim = server.addPlayer()
+            arenaManager.joinArena(victim)
+            arenaManager.joinArena(server.addPlayer())
+            arenaManager.startArena(GameType.TeamDeathMatch)
+
+            val event = PlayerDeathEvent(
+                victim, DamageSource.builder(DamageType.FALL).build(),
+                emptyList<ItemStack>(),
+                0,
+                Component.text(""),
+                false
+            )
+
+            handler.onPlayerDeath(event)
+
+            val stateAfter = arenaManager.getState() as ArenaState.OnGoingTeamDeathMatch
+
+            assertEquals(0, stateAfter.scoreboard[Team.Yellow]?.get())
+            assertEquals(0, stateAfter.scoreboard[Team.Blue]?.get())
+        }
     }
 }
