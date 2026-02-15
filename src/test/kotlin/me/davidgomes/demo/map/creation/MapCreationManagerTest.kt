@@ -4,14 +4,13 @@ import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
 import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.createTempConfig
 import me.davidgomes.demo.map.MapManager
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.junit.jupiter.api.Nested
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
-import utils.ExYamlConfiguration
-import java.io.File
 import java.util.logging.Logger
 import kotlin.test.*
 
@@ -25,10 +24,9 @@ class MapCreationManagerTest {
     fun setUp() {
         server = MockBukkit.mock()
         MockBukkit.load(Main::class.java)
+
         logger = Logger.getLogger("MapCreationManagerTest")
-        val tempFile = File.createTempFile("maps_test", ".yml")
-        tempFile.deleteOnExit()
-        mapManager = spyk(MapManager(logger, ExYamlConfiguration(tempFile)))
+        mapManager = spyk(MapManager(logger, createTempConfig()))
         manager = MapCreationManager(logger, mapManager)
     }
 

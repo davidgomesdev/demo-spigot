@@ -1,6 +1,5 @@
 package me.davidgomes.demo.messages
 
-// TODO: extract more
 const val NOT_IN_SESSION_MESSAGE =
     "You are not currently creating a map, use /mg create_map <name> to start creating one!"
 const val NOT_DROPPABLE_WHILE_CREATING_MESSAGE = "You can't drop map creation items while creating a map!"
