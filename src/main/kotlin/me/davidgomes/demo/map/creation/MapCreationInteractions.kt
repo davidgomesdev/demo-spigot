@@ -6,13 +6,14 @@ import me.davidgomes.demo.messages.FINISHED_MAP_CREATION
 import me.davidgomes.demo.messages.NOT_DROPPABLE_WHILE_CREATING_MESSAGE
 import me.davidgomes.demo.messages.NOT_IN_SESSION_MESSAGE
 import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent
 import utils.isNotRightClick
 
 // TODO: could I add a status "creating map" to the player?
 class MapCreationInteractions(
     private val manager: MapCreationManager,
-) {
+) : Listener {
     // TODO: allow recreating a map, load the spawns from the existing map and allow changing them, then saving the map with the same name
     @EventHandler
     fun onPlayerSetSpawn(event: PlayerInteractEvent) {

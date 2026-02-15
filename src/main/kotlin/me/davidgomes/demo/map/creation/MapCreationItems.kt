@@ -14,5 +14,7 @@ object MapCreationItems {
         Team.entries.associateWith { InteractableItem(it.spawnItemMaterial, "Spawn Picker for Team ${it.name}") }
 
     fun getTeamFromSpawnPicker(item: ItemStack): Team? =
-        spawnPickers.entries.firstOrNull { it.value isTheSame item }?.key
+        spawnPickers.entries
+            .firstOrNull { it.value isTheSame item }
+            ?.key
 }
