@@ -1,7 +1,5 @@
 package me.davidgomes.demo.heroes.butcher
 
-import me.davidgomes.demo.hasBlocksBelow
-import me.davidgomes.demo.isRightClick
 import me.davidgomes.demo.items.InteractableItem
 import org.bukkit.Location
 import org.bukkit.Material
@@ -16,6 +14,8 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import org.bukkit.util.Vector
+import utils.hasBlocksBelow
+import utils.isNotRightClick
 import java.util.*
 import java.util.logging.Logger
 import kotlin.math.roundToInt
@@ -35,7 +35,7 @@ class AnvilDropEventHandler(
 
     @EventHandler
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
-        if (!evt.isRightClick()) return
+        if (evt.isNotRightClick()) return
         if (anvilDropItem isNotTheSame evt.item) return
 
         logger.info("Player ${evt.player.name} casted the anvil ability")

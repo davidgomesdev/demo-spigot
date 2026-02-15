@@ -1,5 +1,6 @@
 package me.davidgomes.demo.arena
 
+import org.bukkit.Material
 import java.util.*
 import java.util.logging.Logger
 
@@ -42,7 +43,11 @@ class ArenaManager(
     fun getPlayersInTeam(team: Team): List<UUID> = players[team]?.toList() ?: emptyList()
 }
 
-enum class Team {
-    Yellow,
-    Blue,
+enum class Team(val spawnItemMaterial: Material) {
+    Yellow(Material.YELLOW_CANDLE),
+    Blue(Material.BLUE_CANDLE);
+
+    companion object {
+        val count = entries.count()
+    }
 }

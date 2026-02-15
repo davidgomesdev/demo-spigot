@@ -1,4 +1,4 @@
-package me.davidgomes.demo
+package utils
 
 import org.bukkit.Location
 import org.bukkit.Material

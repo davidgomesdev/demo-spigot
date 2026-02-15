@@ -1,6 +1,5 @@
 package me.davidgomes.demo.arena
 
-import me.davidgomes.demo.isRightClick
 import me.davidgomes.demo.items.InteractableItem
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
@@ -10,6 +9,7 @@ import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import utils.isNotRightClick
 
 // TODO: remove arena join item when player joins arena, and give it back when they leave
 class ArenaEventHandler(
@@ -44,7 +44,7 @@ class ArenaEventHandler(
 
     @EventHandler
     fun onPlayerInteract(event: PlayerInteractEvent) {
-        if (!event.isRightClick()) return
+        if (event.isNotRightClick()) return
         if (event.item != arenaJoinItem) return
 
         event.isCancelled = true
