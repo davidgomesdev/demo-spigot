@@ -1,7 +1,7 @@
 ## Essential commands
 
-`/gamerule doDayLightCycle false`
-`/gamerule doWeatherCycle false`
+- `/gamerule doDayLightCycle false`
+- `/gamerule doWeatherCycle false`
 
 ## Auto deploy
 
