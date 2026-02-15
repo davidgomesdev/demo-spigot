@@ -13,7 +13,6 @@ import org.bukkit.plugin.java.JavaPlugin
 import utils.ExYamlConfiguration
 import java.io.File
 
-
 @Suppress("unused")
 open class Main : JavaPlugin() {
     override fun onEnable() {
@@ -43,7 +42,5 @@ open class Main : JavaPlugin() {
         logger.info("Disabled")
     }
 
-    fun getConfigFile(filename: String): ExYamlConfiguration {
-        return ExYamlConfiguration(File(this.dataFolder, filename))
-    }
+    fun getConfigFile(filename: String): ExYamlConfiguration = ExYamlConfiguration(File(this.dataFolder, filename))
 }

@@ -13,7 +13,6 @@ import utils.isNotRightClick
 class MapCreationInteractions(
     private val manager: MapCreationManager,
 ) {
-
     // TODO: allow recreating a map, load the spawns from the existing map and allow changing them, then saving the map with the same name
     @EventHandler
     fun onPlayerSetSpawn(event: PlayerInteractEvent) {
@@ -29,7 +28,6 @@ class MapCreationInteractions(
         }
 
         val session = manager.getSession(creator) ?: return
-
 
         event.isCancelled = true
 

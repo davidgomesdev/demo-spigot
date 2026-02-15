@@ -43,9 +43,12 @@ class ArenaManager(
     fun getPlayersInTeam(team: Team): List<UUID> = players[team]?.toList() ?: emptyList()
 }
 
-enum class Team(val spawnItemMaterial: Material) {
+enum class Team(
+    val spawnItemMaterial: Material,
+) {
     Yellow(Material.YELLOW_CANDLE),
-    Blue(Material.BLUE_CANDLE);
+    Blue(Material.BLUE_CANDLE),
+    ;
 
     companion object {
         val count = entries.count()

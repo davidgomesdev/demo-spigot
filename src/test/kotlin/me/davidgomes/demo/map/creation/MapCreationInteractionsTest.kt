@@ -197,4 +197,3 @@ class MapCreationInteractionsTest {
         verify { event.isCancelled = true }
     }
 }
-

@@ -79,4 +79,3 @@ class MapCreationItemsTest {
         assertNull(result)
     }
 }
-

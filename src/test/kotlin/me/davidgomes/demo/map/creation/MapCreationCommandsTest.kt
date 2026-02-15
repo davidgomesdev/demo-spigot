@@ -49,4 +49,3 @@ class MapCreationCommandsTest {
         assertEquals(2, commandNode.size)
     }
 }
-

@@ -42,10 +42,11 @@ class MapManagerTest {
     @Test
     fun `existsMapWithName returns true when map with name exists`() {
         val world = server.addSimpleWorld("test_world")
-        val teamSpawns = mapOf(
-            Team.Yellow to Location(world, 0.0, 0.0, 0.0),
-            Team.Blue to Location(world, 10.0, 0.0, 0.0)
-        )
+        val teamSpawns =
+            mapOf(
+                Team.Yellow to Location(world, 0.0, 0.0, 0.0),
+                Team.Blue to Location(world, 10.0, 0.0, 0.0),
+            )
         val gameMap = GameMap("existing_map", teamSpawns)
 
         config.setAndSave("maps", listOf(gameMap))
@@ -67,10 +68,11 @@ class MapManagerTest {
     @Test
     fun `reloadMaps loads maps from config`() {
         val world = server.addSimpleWorld("test_world")
-        val teamSpawns = mapOf(
-            Team.Yellow to Location(world, 0.0, 0.0, 0.0),
-            Team.Blue to Location(world, 10.0, 0.0, 0.0)
-        )
+        val teamSpawns =
+            mapOf(
+                Team.Yellow to Location(world, 0.0, 0.0, 0.0),
+                Team.Blue to Location(world, 10.0, 0.0, 0.0),
+            )
         val gameMap = GameMap("test_map", teamSpawns)
 
         config.setAndSave("maps", listOf(gameMap))
@@ -111,4 +113,3 @@ class MapManagerTest {
         assertTrue(manager existsMapWithName "new_map")
     }
 }
-

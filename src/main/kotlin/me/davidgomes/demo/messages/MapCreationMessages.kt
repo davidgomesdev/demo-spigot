@@ -7,6 +7,7 @@ const val FINISHED_MAP_CREATION = "Finished map creation!"
 const val CANNOT_FINISH_YET_MESSAGE = "You cannot finish the map creation yet, not all spawns have been set!"
 const val EDITING_EXISTING_MAP =
     "You're editing an existing map, you don't need to set all spawns again, just change the ones you want to change and then finish the creation process."
-const val CREATION_MODE_STARTED = "You are now in map creation mode! " +
+const val CREATION_MODE_STARTED =
+    "You are now in map creation mode! " +
         "Use the spawn pickers to set the spawns for each team, " +
         "and then use the finish creation item to finish the process."
