@@ -3,6 +3,7 @@ package me.davidgomes.demo.map.creation
 import me.davidgomes.demo.arena.Team
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
+import me.davidgomes.demo.messages.EDITING_EXISTING_MAP
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -15,17 +16,16 @@ class MapCreationManager(
     val sessions: MutableMap<Player, MapCreationSession> = mutableMapOf(),
 ) {
 
-    fun createSession(creator: Player, mapName: String): MapCreationSession? {
-        if (mapManager existsMapWithName mapName) {
-            creator.sendMessage(
-                Component.text(
-                    "A map with the name '$mapName' already exists, choose a different name!"
-                )
-            )
-            return null
-        }
+    fun createSession(creator: Player, mapName: String): MapCreationSession {
+        val session =
+            if (mapManager existsMapWithName mapName) {
+                creator.sendMessage(EDITING_EXISTING_MAP)
+                val existingTeamSpawns = mapManager.getMapByName(mapName)!!.teamSpawns
 
-        val session = MapCreationSession(mapName)
+                MapCreationSession(mapName, existingTeamSpawns.toMutableMap())
+            } else {
+                MapCreationSession(mapName)
+            }
 
         sessions[creator] = session
 

@@ -20,8 +20,26 @@ data class GameMap(val name: String, val teamSpawns: TeamSpawns) : Configuration
         @Suppress("UNCHECKED_CAST")
         fun deserialize(serialized: Map<String, Any>): GameMap {
             val name = serialized["name"] as? String ?: throw InvalidConfigurationException("Missing 'name' field")
-            val teamSpawns = serialized["teamSpawns"] as? TeamSpawns
+            val rawTeamSpawns = serialized["teamSpawns"] as? Map<Any, Any>
                 ?: throw InvalidConfigurationException("Missing 'teamSpawns' field")
+
+            val teamSpawns = rawTeamSpawns.entries.associate { entry ->
+                val teamName =
+                    entry.key as? String ?: throw InvalidConfigurationException("Invalid team name: ${entry.key}")
+
+                val team = try {
+                    Team.valueOf(teamName)
+                } catch (_: IllegalArgumentException) {
+                    throw InvalidConfigurationException("Invalid team name: $teamName")
+                }
+
+                val location = Location.deserialize(
+                    entry.value as? Map<String, Any>
+                        ?: throw InvalidConfigurationException("Invalid location for team $teamName")
+                )
+
+                team to location
+            }
 
             return GameMap(name, teamSpawns)
         }

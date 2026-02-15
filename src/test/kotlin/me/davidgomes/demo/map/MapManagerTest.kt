@@ -82,8 +82,8 @@ class MapManagerTest {
 
         val manager = MapManager(logger, config)
 
-        assertEquals(1, manager.maps.size)
-        assertEquals("test_map", manager.maps[0].name)
+        assertEquals(1, manager.getAllMaps().size)
+        assertEquals("test_map", manager.getAllMaps().first().name)
     }
 
     @Test
@@ -114,7 +114,7 @@ class MapManagerTest {
 
         manager.addMap(session)
 
-        assertEquals(1, manager.maps.size)
+        assertEquals(1, manager.getAllMaps().size)
         assertTrue(manager existsMapWithName "new_map")
     }
 }
