@@ -18,6 +18,7 @@ class InteractableItem(
 
     infix fun isNotTheSame(itemStack: ItemStack?) = !(this isTheSame itemStack)
 
+    @Suppress("UNUSED")
     infix fun isTheSame(item: Item?) = this isTheSame item?.itemStack
 
     infix fun isTheSame(itemStack: ItemStack?): Boolean {
