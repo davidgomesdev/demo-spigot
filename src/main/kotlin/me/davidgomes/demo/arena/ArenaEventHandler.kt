@@ -30,7 +30,7 @@ class ArenaEventHandler(
     @EventHandler
     fun onPlayerInteractWithArenaJoin(event: PlayerInteractEvent) {
         if (event.isNotRightClick()) return
-        if (event.item != arenaJoinItem) return
+        if (event.item != ArenaItems.join) return
 
         event.isCancelled = true
 
@@ -48,7 +48,7 @@ class ArenaEventHandler(
     @EventHandler
     fun onPlayerInteractWithArenaStart(event: PlayerInteractEvent) {
         if (event.isNotRightClick()) return
-        if (event.item != arenaStartItem) return
+        if (event.item != ArenaItems.start) return
 
         event.isCancelled = true
 
@@ -96,7 +96,7 @@ class ArenaEventHandler(
 
     @EventHandler
     fun onPlayerDropItem(event: PlayerDropItemEvent) {
-        if (arenaJoinItem isNotTheSame event.itemDrop && arenaStartItem isNotTheSame event.itemDrop) return
+        if (ArenaItems.join isNotTheSame event.itemDrop && ArenaItems.start isNotTheSame event.itemDrop) return
 
         event.isCancelled = true
     }

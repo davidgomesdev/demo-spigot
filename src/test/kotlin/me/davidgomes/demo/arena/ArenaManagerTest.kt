@@ -28,7 +28,8 @@ class ArenaManagerTest {
         MockBukkit.mock()
         server = ServerMock()
         plugin = spyk(MockBukkit.load(Main::class.java))
-        arenaManager = ArenaManager(plugin, Logger.getLogger("ArenaManagerTest"))
+        val logger = Logger.getLogger("ArenaManagerTest")
+        arenaManager = ArenaManager(plugin, logger, HeroManager(plugin, logger))
 
         every { plugin.server } returns server
     }
@@ -178,7 +179,7 @@ class ArenaManagerTest {
 
             arenaManager.addItemToJoinArena(player)
 
-            assertEquals(arenaJoinItem, player.inventory.getItem(0))
+            assertEquals(ArenaItems.join, player.inventory.getItem(0))
         }
 
         @Test

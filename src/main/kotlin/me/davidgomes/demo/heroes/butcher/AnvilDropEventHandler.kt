@@ -1,8 +1,8 @@
 package me.davidgomes.demo.heroes.butcher
 
+import me.davidgomes.demo.heroes.butcher.ButcherItems.anvilDropItem
 import me.davidgomes.demo.heroes.getSenderOf
 import me.davidgomes.demo.heroes.setEntitySender
-import me.davidgomes.demo.items.InteractableItem
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
@@ -26,11 +26,6 @@ class AnvilDropEventHandler(
     val plugin: Plugin,
     val logger: Logger,
 ) : Listener {
-    val anvilDropItem =
-        InteractableItem(
-            material = Material.ANVIL,
-            name = "Anvil Drop",
-        )
 
     @EventHandler
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
