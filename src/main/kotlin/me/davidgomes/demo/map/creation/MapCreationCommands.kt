@@ -6,7 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands.argument
 import io.papermc.paper.command.brigadier.Commands.literal
-import net.kyori.adventure.text.Component
+import me.davidgomes.demo.messages.CREATION_MODE_STARTED
 import org.bukkit.entity.Player
 import java.util.logging.Logger
 
@@ -26,17 +26,10 @@ class MapCreationCommands(
                 return@executes Command.SINGLE_SUCCESS
             }
 
-            logger.info("Player ${playerCreating.name} is creating map with name $mapName")
-
             manager.createSession(playerCreating, mapName)
+            playerCreating.sendMessage(CREATION_MODE_STARTED)
 
-            playerCreating.sendMessage(
-                Component.text(
-                    "You are now in map creation mode! " +
-                            "Use the spawn pickers to set the spawns for each team, " +
-                            "and then use the finish creation item to finish the process."
-                )
-            )
+            logger.info("Player ${playerCreating.name} started creating map with name $mapName")
 
             Command.SINGLE_SUCCESS
         }
