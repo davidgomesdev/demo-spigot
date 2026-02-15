@@ -1,33 +1,40 @@
 package me.davidgomes.demo.arena
 
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.util.*
+import org.mockbukkit.mockbukkit.MockBukkit
+import org.mockbukkit.mockbukkit.ServerMock
 import java.util.logging.Logger
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class ArenaManagerTest {
-    private fun createArenaManager(): ArenaManager = ArenaManager(Logger.getLogger("ArenaManagerTest"))
+    lateinit var arenaManager: ArenaManager
+    lateinit var server: ServerMock
+
+    @BeforeTest
+    fun setUp() {
+        MockBukkit.mock()
+        server = ServerMock()
+        arenaManager = ArenaManager(Logger.getLogger("ArenaManagerTest"))
+    }
+
+    @AfterTest
+    fun tearDown() {
+        MockBukkit.unmock()
+    }
 
     @Test
     fun `joinArena assigns player to a team`() {
-        val arenaManager = createArenaManager()
-        val playerId = UUID.randomUUID()
+        val player = server.addPlayer()
+        val team = arenaManager.joinArena(player)
 
-        val team = arenaManager.joinArena(playerId)
-
-        assertTrue(arenaManager.isInArena(playerId))
-        assertEquals(team, arenaManager.getTeam(playerId))
+        assertTrue(arenaManager.isInArena(player.uniqueId))
+        assertEquals(team, arenaManager.getTeam(player.uniqueId))
     }
 
     @Test
     fun `second player joins second team when there is already one of the first`() {
-        val arenaManager = createArenaManager()
-
-        val firstTeam = arenaManager.joinArena(UUID.randomUUID())
-        val secondTeam = arenaManager.joinArena(UUID.randomUUID())
+        val firstTeam = arenaManager.joinArena(server.addPlayer())
+        val secondTeam = arenaManager.joinArena(server.addPlayer())
 
         assertEquals(Team.Yellow, firstTeam)
         assertEquals(Team.Blue, secondTeam)
@@ -35,69 +42,61 @@ class ArenaManagerTest {
 
     @Test
     fun `joinArena assigns player to team with least players`() {
-        val arenaManager = createArenaManager()
-
         repeat(3) {
-            arenaManager.joinArena(UUID.randomUUID())
+            arenaManager.joinArena(server.addPlayer())
         }
 
-        val newPlayerId = UUID.randomUUID()
-        val assignedTeam = arenaManager.joinArena(newPlayerId)
+        val newPlayer = server.addPlayer()
+        val assignedTeam = arenaManager.joinArena(newPlayer)
 
         // Should be assigned to Blue since it has fewer players
         assertEquals(Team.Blue, assignedTeam)
-        assertTrue(arenaManager.getPlayersInTeam(Team.Blue).contains(newPlayerId))
+        assertTrue(arenaManager.getPlayersInTeam(Team.Blue).contains(newPlayer.uniqueId))
         assertEquals(2, arenaManager.getTeamSize(Team.Blue))
         assertEquals(2, arenaManager.getTeamSize(Team.Yellow))
     }
 
     @Test
     fun `leaveArena removes player from their team`() {
-        val arenaManager = createArenaManager()
-        val playerId = UUID.randomUUID()
+        val player = server.addPlayer()
 
-        arenaManager.joinArena(playerId)
-        assertTrue(arenaManager.isInArena(playerId))
+        arenaManager.joinArena(player)
+        assertTrue(arenaManager.isInArena(player.uniqueId))
 
-        arenaManager.leaveArena(playerId)
-        assertFalse(arenaManager.isInArena(playerId))
+        arenaManager.leaveArena(player)
+        assertFalse(arenaManager.isInArena(player.uniqueId))
     }
 
     @Test
     fun `leaveArena handles player not in arena gracefully`() {
-        val arenaManager = createArenaManager()
-        val playerId = UUID.randomUUID()
+        val player = server.addPlayer()
 
         assertDoesNotThrow {
-            arenaManager.leaveArena(playerId)
+            arenaManager.leaveArena(player)
         }
-        assertFalse(arenaManager.isInArena(playerId))
+        assertFalse(arenaManager.isInArena(player.uniqueId))
     }
 
     @Test
     fun `isInArena returns false for player not in arena`() {
-        val arenaManager = createArenaManager()
-        val playerId = UUID.randomUUID()
+        val player = server.addPlayer()
 
-        assertFalse(arenaManager.isInArena(playerId))
+        assertFalse(arenaManager.isInArena(player.uniqueId))
     }
 
     @Test
     fun `isInArena returns true for player in arena`() {
-        val arenaManager = createArenaManager()
-        val playerId = UUID.randomUUID()
+        val player = server.addPlayer()
 
-        arenaManager.joinArena(playerId)
+        arenaManager.joinArena(player)
 
-        assertTrue(arenaManager.isInArena(playerId))
+        assertTrue(arenaManager.isInArena(player.uniqueId))
     }
 
     @Test
     fun `first player joins first team when no players exist`() {
-        val arenaManager = createArenaManager()
-        val playerId = UUID.randomUUID()
-
-        val team = arenaManager.joinArena(playerId)
+        val player = server.addPlayer()
+        val team = arenaManager.joinArena(player)
 
         assertEquals(Team.entries.first(), team)
     }

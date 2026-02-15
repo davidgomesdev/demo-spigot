@@ -1,5 +1,9 @@
 package me.davidgomes.demo.messages
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.title.Title
+
 const val NOT_IN_SESSION_MESSAGE =
     "You are not currently creating a map, use /mg create_map <name> to start creating one!"
 const val NOT_DROPPABLE_WHILE_CREATING_MESSAGE = "You can't drop map creation items while creating a map!"
@@ -11,3 +15,17 @@ const val CREATION_MODE_STARTED =
     "You are now in map creation mode! " +
         "Use the spawn pickers to set the spawns for each team, " +
         "and then use the finish creation item to finish the process."
+
+val CREATING_MAP_TITLE =
+    Title.title(
+        Component.text("Creating map", NamedTextColor.WHITE),
+        Component.text("Right click the spawn picker to set the spawn for each team!"),
+    )
+val ABORTED_MAP_CREATION = Component.text("Aborted map creation.", NamedTextColor.RED)
+
+fun mapCreationBroadcast(
+    playerName: String,
+    mapName: String,
+) = Component.text("Player $playerName has created a new map: $mapName!", NamedTextColor.GREEN)
+
+fun finishedMap(mapName: String) = Component.text("Finished map '$mapName'!", NamedTextColor.YELLOW)

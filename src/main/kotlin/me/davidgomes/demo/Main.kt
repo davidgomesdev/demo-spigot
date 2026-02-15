@@ -14,7 +14,6 @@ import org.bukkit.plugin.java.JavaPlugin
 import utils.ExYamlConfiguration
 import java.io.File
 
-@Suppress("unused")
 open class Main : JavaPlugin() {
     override fun onEnable() {
         ConfigurationSerialization.registerClass(GameMap::class.java)

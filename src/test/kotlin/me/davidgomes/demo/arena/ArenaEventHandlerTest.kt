@@ -61,7 +61,7 @@ class ArenaEventHandlerTest {
     fun `onPlayerQuit removes player from arena`() {
         val player = server.addPlayer()
 
-        arenaManager.joinArena(player.uniqueId)
+        arenaManager.joinArena(player)
         assertTrue(arenaManager.isInArena(player.uniqueId))
 
         val event = PlayerQuitEvent(player, Component.text("left"), PlayerQuitEvent.QuitReason.DISCONNECTED)
@@ -87,9 +87,9 @@ class ArenaEventHandlerTest {
     @Test
     fun `onPlayerInteract joins player to arena when using join item on air`() {
         val player = server.addPlayer()
-        player.inventory.setItemInMainHand(handler.arenaJoinItem)
+        player.inventory.setItemInMainHand(arenaJoinItem)
 
-        val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, handler.arenaJoinItem, null, BlockFace.SELF)
+        val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, arenaJoinItem, null, BlockFace.SELF)
 
         handler.onPlayerInteract(event)
 
@@ -101,13 +101,13 @@ class ArenaEventHandlerTest {
     @Test
     fun `onPlayerInteract joins player to arena when using join item on a block`() {
         val player = server.addPlayer()
-        player.inventory.setItemInMainHand(handler.arenaJoinItem)
+        player.inventory.setItemInMainHand(arenaJoinItem)
 
         val event =
             PlayerInteractEvent(
                 player,
                 Action.RIGHT_CLICK_BLOCK,
-                handler.arenaJoinItem,
+                arenaJoinItem,
                 BlockMock(Material.ACACIA_PLANKS, player.location),
                 BlockFace.EAST,
             )
@@ -122,9 +122,9 @@ class ArenaEventHandlerTest {
     @Test
     fun `onPlayerInteract does nothing for left click`() {
         val player = server.addPlayer()
-        player.inventory.setItemInMainHand(handler.arenaJoinItem)
+        player.inventory.setItemInMainHand(arenaJoinItem)
 
-        val event = PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, handler.arenaJoinItem, null, BlockFace.SELF)
+        val event = PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, arenaJoinItem, null, BlockFace.SELF)
 
         handler.onPlayerInteract(event)
 
@@ -135,10 +135,10 @@ class ArenaEventHandlerTest {
     fun `onPlayerInteract does nothing when player is already in arena`() {
         val player = server.addPlayer()
 
-        arenaManager.joinArena(player.uniqueId)
-        player.inventory.setItemInMainHand(handler.arenaJoinItem)
+        arenaManager.joinArena(player)
+        player.inventory.setItemInMainHand(arenaJoinItem)
 
-        val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, handler.arenaJoinItem, null, BlockFace.SELF)
+        val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, arenaJoinItem, null, BlockFace.SELF)
 
         handler.onPlayerInteract(event)
 
@@ -175,14 +175,14 @@ class ArenaEventHandlerTest {
     fun `onPlayerDropItem cancels event when dropping join item`() {
         val player = server.addPlayer()
 
-        player.inventory.setItemInMainHand(handler.arenaJoinItem)
+        player.inventory.setItemInMainHand(arenaJoinItem)
 
-        val event = PlayerDropItemEvent(player, ItemMock(server, UUID.randomUUID(), handler.arenaJoinItem))
+        val event = PlayerDropItemEvent(player, ItemMock(server, UUID.randomUUID(), arenaJoinItem))
 
         handler.onPlayerDropItem(event)
 
         assertTrue(event.isCancelled)
-        assertEquals(handler.arenaJoinItem, player.inventory.getItem(0))
+        assertEquals(arenaJoinItem, player.inventory.getItem(0))
     }
 
     @Test

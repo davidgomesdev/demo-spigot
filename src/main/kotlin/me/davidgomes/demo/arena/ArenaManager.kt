@@ -1,8 +1,16 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.items.InteractableItem
 import org.bukkit.Material
+import org.bukkit.entity.Player
 import java.util.*
 import java.util.logging.Logger
+
+val arenaJoinItem =
+    InteractableItem(
+        material = Material.DIAMOND_SWORD,
+        name = "Join Arena",
+    )
 
 // TODO: NOT THREAD-SAFE, needs a mutex
 class ArenaManager(
@@ -12,10 +20,19 @@ class ArenaManager(
             .associateWith { mutableListOf<UUID>() }
             .toMutableMap(),
 ) {
-    fun joinArena(playerId: UUID): Team {
+    fun addItemJoinArena(player: Player) {
+        player.inventory.apply {
+            clear()
+            setItem(0, arenaJoinItem)
+        }
+    }
+
+    fun joinArena(player: Player): Team {
+        val playerId = player.uniqueId
         val team = players.minBy { it.value.size }.key
 
         players[team]?.add(playerId) ?: players.put(team, mutableListOf(playerId))
+        player.inventory.clear()
 
         return team
     }
@@ -23,7 +40,8 @@ class ArenaManager(
     /*
      * If the player is not in any team, it logs a warning and does nothing.
      */
-    fun leaveArena(playerId: UUID) {
+    fun leaveArena(player: Player) {
+        val playerId = player.uniqueId
         val team = getTeam(playerId)
 
         if (team == null) {
@@ -32,6 +50,7 @@ class ArenaManager(
         }
 
         players[team]?.remove(playerId)
+        addItemJoinArena(player)
     }
 
     fun isInArena(playerId: UUID): Boolean = getTeam(playerId) != null

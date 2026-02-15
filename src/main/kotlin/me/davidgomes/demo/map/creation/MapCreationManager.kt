@@ -3,7 +3,7 @@ package me.davidgomes.demo.map.creation
 import me.davidgomes.demo.arena.Team
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
-import me.davidgomes.demo.messages.EDITING_EXISTING_MAP
+import me.davidgomes.demo.messages.*
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -38,6 +38,8 @@ class MapCreationManager(
             }
         }
 
+        creator.showTitle(CREATING_MAP_TITLE)
+
         logger.info("Started map creation session for player ${creator.name}")
 
         return session
@@ -54,12 +56,14 @@ class MapCreationManager(
             logger.warning("Tried aborting map creation for player ${creator.name} but they don't have an active session")
             return
         }
-        logger.info("Aborted session for player ${creator.name}")
 
-        creator.sendMessage(Component.text("Aborted map creation."))
+        creator.resetTitle()
+        creator.sendMessage(ABORTED_MAP_CREATION)
+        creator.inventory.clear()
 
         sessions.remove(creator)
-        creator.inventory.clear()
+
+        logger.info("Aborted session for player ${creator.name}")
     }
 
     fun finishSession(creator: Player): MapCreationSession? {
@@ -79,9 +83,13 @@ class MapCreationManager(
         }
 
         creator.inventory.clear()
+        creator.resetTitle()
 
         logger.info("Finished map creation session for player ${creator.name}")
         mapManager.addMap(session)
+
+        creator.sendMessage(finishedMap(session.mapName))
+        creator.server.broadcast(mapCreationBroadcast(creator.name, session.mapName))
 
         return session
     }

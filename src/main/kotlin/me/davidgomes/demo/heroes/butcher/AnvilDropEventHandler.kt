@@ -1,28 +1,27 @@
 package me.davidgomes.demo.heroes.butcher
 
+import me.davidgomes.demo.heroes.getSenderOf
+import me.davidgomes.demo.heroes.setEntitySender
 import me.davidgomes.demo.items.InteractableItem
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.NamespacedKey
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Directional
-import org.bukkit.entity.*
+import org.bukkit.entity.Damageable
+import org.bukkit.entity.EntityType
+import org.bukkit.entity.FallingBlock
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityChangeBlockEvent
 import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
 import org.bukkit.util.Vector
 import utils.hasBlocksBelow
 import utils.isNotRightClick
-import java.util.*
 import java.util.logging.Logger
 import kotlin.math.roundToInt
 
-private const val SENDER_TAG = "sender"
-
-// TODO: add tests
 class AnvilDropEventHandler(
     val plugin: Plugin,
     val logger: Logger,
@@ -68,7 +67,7 @@ class AnvilDropEventHandler(
 
         if (fallingBlock.blockData.material != anvilDropItem.material) return
 
-        val sender = getSenderOf(fallingBlock) ?: return
+        val sender = getSenderOf(plugin, fallingBlock) ?: return
 
         val hitLocation = fallingBlock.location
         val world = hitLocation.world
@@ -122,30 +121,10 @@ class AnvilDropEventHandler(
                     }
             }
 
-        // Todo: extract to a generic function "setSender"
-        anvil.persistentDataContainer.set(
-            NamespacedKey(plugin, SENDER_TAG),
-            PersistentDataType.STRING,
-            sender.uniqueId.toString(),
-        )
+        setEntitySender(plugin, anvil, sender)
 
         // Damaged is done in the EntityChangeBlockEvent
         anvil.setHurtEntities(false)
         anvil.velocity = Vector(0.0, AnvilAbilityAttributes.FALL_SPEED_MODIFIER, 0.0)
-    }
-
-    private fun getSenderOf(entity: Entity): Player? {
-        val senderId =
-            entity.persistentDataContainer.get(
-                NamespacedKey(plugin, SENDER_TAG),
-                PersistentDataType.STRING,
-            ) ?: return null
-        val sender = plugin.server.getPlayer(UUID.fromString(senderId))
-
-        if (sender == null) {
-            return null
-        }
-
-        return sender
     }
 }

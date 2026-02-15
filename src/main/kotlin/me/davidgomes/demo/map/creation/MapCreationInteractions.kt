@@ -10,11 +10,9 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent
 import utils.isNotRightClick
 
-// TODO: could I add a status "creating map" to the player?
 class MapCreationInteractions(
     private val manager: MapCreationManager,
 ) : Listener {
-    // TODO: allow recreating a map, load the spawns from the existing map and allow changing them, then saving the map with the same name
     @EventHandler
     fun onPlayerSetSpawn(event: PlayerInteractEvent) {
         if (event.isNotRightClick()) return
@@ -32,7 +30,6 @@ class MapCreationInteractions(
 
         event.isCancelled = true
 
-        creator.location.direction
         session.setSpawn(team, creator.location)
         creator.sendMessage("You've just set the spawn for team ${team.name} at your current location.")
 
