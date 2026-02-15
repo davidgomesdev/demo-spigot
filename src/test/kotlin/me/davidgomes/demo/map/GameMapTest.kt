@@ -68,9 +68,9 @@ class GameMapTest {
         val world = server.addSimpleWorld("test_world")
         val yellowSpawn = Location(world, 10.0, 65.0, 20.0)
         val blueSpawn = Location(world, 30.0, 65.0, 40.0)
-        val teamSpawns: TeamSpawns = mapOf(Team.Yellow to yellowSpawn, Team.Blue to blueSpawn)
+        val teamSpawns = mapOf("Yellow" to yellowSpawn.serialize(), "Blue" to blueSpawn.serialize())
 
-        val serialized = mapOf<String, Any>(
+        val serialized = mapOf(
             "name" to "test_map",
             "teamSpawns" to teamSpawns
         )
@@ -78,7 +78,8 @@ class GameMapTest {
         val gameMap = GameMap.deserialize(serialized)
 
         assertEquals("test_map", gameMap.name)
-        assertEquals(teamSpawns, gameMap.teamSpawns)
+        assertEquals(yellowSpawn, gameMap.teamSpawns[Team.Yellow])
+        assertEquals(blueSpawn, gameMap.teamSpawns[Team.Blue])
     }
 }
 

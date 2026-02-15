@@ -29,8 +29,8 @@ data class GameMap(val name: String, val teamSpawns: TeamSpawns) : Configuration
 
                 val team = try {
                     Team.valueOf(teamName)
-                } catch (_: IllegalArgumentException) {
-                    throw InvalidConfigurationException("Invalid team name: $teamName")
+                } catch (e: IllegalArgumentException) {
+                    throw InvalidConfigurationException("Invalid team name: $teamName", e)
                 }
 
                 val location = Location.deserialize(

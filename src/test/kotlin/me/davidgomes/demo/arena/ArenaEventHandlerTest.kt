@@ -36,7 +36,7 @@ class ArenaEventHandlerTest {
 
         server = MockBukkit.mock()
         arenaManager = ArenaManager(logger)
-        handler = ArenaEventHandler(arenaManager)
+        handler = ArenaEventHandler(logger, arenaManager)
     }
 
     @AfterEach

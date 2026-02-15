@@ -4,38 +4,36 @@ import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
 import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.createTempConfig
 import me.davidgomes.demo.map.creation.MapCreationManager
 import org.bukkit.Location
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
 import utils.ExYamlConfiguration
-import java.io.File
 import java.util.logging.Logger
 import kotlin.test.*
 
 class MapManagerTest {
     private lateinit var server: ServerMock
     private lateinit var logger: Logger
-    private lateinit var tempFile: File
+    private lateinit var config: ExYamlConfiguration
 
     @BeforeTest
     fun setUp() {
         server = MockBukkit.mock()
         MockBukkit.load(Main::class.java)
         logger = Logger.getLogger("MapManagerTest")
-        tempFile = File.createTempFile("maps_test", ".yml")
-        tempFile.deleteOnExit()
+        config = spyk(createTempConfig())
     }
 
     @AfterTest
     fun tearDown() {
         MockBukkit.unmock()
-        tempFile.delete()
+        config.file.delete()
     }
 
     @Test
     fun `existsMapWithName returns false when no maps exist`() {
-        val config = ExYamlConfiguration(tempFile)
         val manager = MapManager(logger, config)
 
         assertFalse(manager existsMapWithName "non_existent")
@@ -50,7 +48,6 @@ class MapManagerTest {
         )
         val gameMap = GameMap("existing_map", teamSpawns)
 
-        val config = ExYamlConfiguration(tempFile)
         config.setAndSave("maps", listOf(gameMap))
 
         val manager = MapManager(logger, config)
@@ -60,7 +57,6 @@ class MapManagerTest {
 
     @Test
     fun `reloadMaps returns empty list when no maps in config`() {
-        val config = ExYamlConfiguration(tempFile)
         val manager = MapManager(logger, config)
 
         val maps = manager.reloadMaps()
@@ -77,7 +73,6 @@ class MapManagerTest {
         )
         val gameMap = GameMap("test_map", teamSpawns)
 
-        val config = ExYamlConfiguration(tempFile)
         config.setAndSave("maps", listOf(gameMap))
 
         val manager = MapManager(logger, config)
@@ -89,7 +84,6 @@ class MapManagerTest {
     @Test
     fun `addMap saves map to config`() {
         val world = server.addSimpleWorld("test_world")
-        val config = spyk(ExYamlConfiguration(tempFile))
         val manager = MapManager(logger, config)
 
         val session = MapCreationManager.MapCreationSession("new_map")
@@ -105,7 +99,6 @@ class MapManagerTest {
     @Test
     fun `addMap updates maps list after adding`() {
         val world = server.addSimpleWorld("test_world")
-        val config = ExYamlConfiguration(tempFile)
         val manager = MapManager(logger, config)
 
         val session = MapCreationManager.MapCreationSession("new_map")

@@ -28,7 +28,7 @@ open class Main : JavaPlugin() {
         val commandsToRegister = arrayOf(mapCreationCommands.createMap)
 
         server.pluginManager.registerEvents(AnvilDropEventHandler(this, logger), this)
-        server.pluginManager.registerEvents(ArenaEventHandler(arenaManager), this)
+        server.pluginManager.registerEvents(ArenaEventHandler(logger, arenaManager), this)
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commandsRegister ->
             commandsRegister.registrar().run {
