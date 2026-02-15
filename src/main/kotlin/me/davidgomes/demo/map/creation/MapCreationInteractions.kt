@@ -1,25 +1,35 @@
 package me.davidgomes.demo.map.creation
 
 import me.davidgomes.demo.arena.Team
-import net.kyori.adventure.text.Component
+import me.davidgomes.demo.messages.CANNOT_FINISH_YET_MESSAGE
+import me.davidgomes.demo.messages.FINISHED_MAP_CREATION
+import me.davidgomes.demo.messages.NOT_DROPPABLE_WHILE_CREATING_MESSAGE
+import me.davidgomes.demo.messages.NOT_IN_SESSION_MESSAGE
 import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerInteractEvent
-import utils.isNotLeftClick
+import utils.isNotRightClick
 
+// TODO: could I add a status "creating map" to the player?
 class MapCreationInteractions(
     private val manager: MapCreationManager,
 ) {
 
+    // TODO: allow recreating a map, load the spawns from the existing map and allow changing them, then saving the map with the same name
     @EventHandler
     fun onPlayerSetSpawn(event: PlayerInteractEvent) {
-        if (event.isNotLeftClick()) return
+        if (event.isNotRightClick()) return
 
         val creator = event.player
 
-        if (manager isNotInSession creator) return
-
         val team = MapCreationItems.getTeamFromSpawnPicker(event.item ?: return) ?: return
+
+        if (manager isNotInSession creator) {
+            creator.sendMessage(NOT_IN_SESSION_MESSAGE)
+            return
+        }
+
         val session = manager.getSession(creator) ?: return
+
 
         event.isCancelled = true
 
@@ -40,20 +50,26 @@ class MapCreationInteractions(
 
     @EventHandler
     fun onPlayerFinishCreation(event: PlayerInteractEvent) {
-        if (event.isNotLeftClick()) return
-        if (manager isNotInSession event.player) return
+        if (event.isNotRightClick()) return
         if (MapCreationItems.finishCreation isNotTheSame event.item) return
 
-        val session = manager.getSession(event.player) ?: return
+        val creator = event.player
 
-        if (!session.isComplete()) {
-            event.player.sendMessage(Component.text("You cannot finish the map creation yet, not all spawns have been set!"))
+        if (manager isNotInSession creator) {
+            creator.sendMessage(NOT_IN_SESSION_MESSAGE)
             return
         }
 
-        manager.finishSession(event.player)
+        val session = manager.getSession(creator) ?: return
 
-        event.player.sendMessage(Component.text("Finished map creation!"))
+        if (!session.isComplete()) {
+            creator.sendMessage(CANNOT_FINISH_YET_MESSAGE)
+            return
+        }
+
+        manager.finishSession(creator)
+
+        creator.sendMessage(FINISHED_MAP_CREATION)
     }
 
     @EventHandler
@@ -78,7 +94,7 @@ class MapCreationInteractions(
         val session = manager.getSession(event.player) ?: return
 
         if (session.isComplete()) {
-            event.player.sendMessage(Component.text("You cannot drop the finish creation item!"))
+            event.player.sendMessage(NOT_DROPPABLE_WHILE_CREATING_MESSAGE)
         }
 
         event.isCancelled = true
