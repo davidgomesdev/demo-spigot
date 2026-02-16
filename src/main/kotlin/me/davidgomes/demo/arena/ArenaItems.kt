@@ -4,6 +4,11 @@ import me.davidgomes.demo.items.GameItem
 import org.bukkit.Material
 
 object ArenaItems {
+    val heroSelector =
+        GameItem(
+            material = Material.BOOK,
+            name = "Hero Selector",
+        )
     val join =
         GameItem(
             material = Material.DIAMOND_SWORD,

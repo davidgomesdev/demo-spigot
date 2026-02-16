@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import me.davidgomes.demo.arena.ArenaEventHandler
 import me.davidgomes.demo.arena.ArenaManager
 import me.davidgomes.demo.arena.HeroManager
+import me.davidgomes.demo.arena.HeroSelectorInventory
 import me.davidgomes.demo.heroes.butcher.AnvilDropEventHandler
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
@@ -21,6 +22,7 @@ open class Main : JavaPlugin() {
 
         val heroManager = HeroManager(this, logger)
         val arenaManager = ArenaManager(this, logger, heroManager)
+        val heroSelectorInventory = HeroSelectorInventory(server)
 
         val mapManager = MapManager(logger, getConfigFile("maps.yml"))
         val mapCreationManager = MapCreationManager(logger, mapManager)
@@ -28,9 +30,13 @@ open class Main : JavaPlugin() {
 
         val commandsToRegister = arrayOf(mapCreationCommands.createMap)
 
-        server.pluginManager.registerEvents(MapCreationInteractions(mapCreationManager), this)
-        server.pluginManager.registerEvents(AnvilDropEventHandler(this, logger), this)
-        server.pluginManager.registerEvents(ArenaEventHandler(logger, arenaManager), this)
+        val eventHandlers = listOf(
+            AnvilDropEventHandler(this, logger),
+            MapCreationInteractions(mapCreationManager),
+            ArenaEventHandler(logger, arenaManager, heroSelectorInventory)
+        )
+
+        eventHandlers.forEach { server.pluginManager.registerEvents(it, this)}
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commandsRegister ->
             commandsRegister.registrar().run {

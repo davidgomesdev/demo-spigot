@@ -1,13 +1,11 @@
 package me.davidgomes.demo.arena
 
-import me.davidgomes.demo.messages.ALREADY_IN_ARENA
-import me.davidgomes.demo.messages.JOINED_ARENA
-import me.davidgomes.demo.messages.NOT_ENOUGH_PLAYERS_TO_START
-import me.davidgomes.demo.messages.NOT_IN_ARENA
+import me.davidgomes.demo.messages.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerJoinEvent
@@ -18,6 +16,7 @@ import java.util.logging.Logger
 class ArenaEventHandler(
     val logger: Logger,
     val arenaManager: ArenaManager,
+    val heroSelectorInventory: HeroSelectorInventory
 ) : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
@@ -43,6 +42,57 @@ class ArenaEventHandler(
         arenaManager.joinArena(event.player)
         event.player.sendMessage(JOINED_ARENA)
         logger.info("Player '${event.player.name}' joined an arena")
+    }
+
+    @EventHandler
+    fun onPlayerInteractWithHeroSelector(event: PlayerInteractEvent) {
+        if (event.isNotRightClick()) return
+        if (event.item != ArenaItems.heroSelector) return
+
+        event.isCancelled = true
+
+        if (!(arenaManager isInArena event.player)) {
+            event.player.sendMessage(NOT_IN_ARENA)
+            logger.info("Player '${event.player.name}' tried to join arena but is already in one")
+            return
+        }
+
+        event.player.openInventory(heroSelectorInventory.inventory)
+
+        logger.info("Player '${event.player.name}' is changing hero")
+    }
+
+    @EventHandler
+    fun onPlayerSelectHero(event: InventoryClickEvent) {
+        if (event.clickedInventory?.holder !is HeroSelectorInventory) return
+
+        val clickedItem = event.currentItem
+
+        if (clickedItem == null) return
+
+        event.isCancelled = true
+
+        val player = event.whoClicked as Player
+
+        if (!(arenaManager isInArena player)) {
+            player.sendMessage(NOT_IN_ARENA)
+            logger.warning("Player '${player.name}' tried to select hero but is not in an arena")
+            return
+        }
+
+        val hero = arenaManager.setHeroByItem(player, clickedItem)
+
+        // Not great, but this function can only return null when the item is not a hero selector item,
+        // since we validate they are in an arena before
+        if (hero == null) {
+            player.sendMessage(CLICK_ON_UNEXISTENT_HERO)
+            logger.warning("Player '${player.name}' clicked on an item that is not a hero selector item")
+            return
+        }
+
+        logger.info("Player '${player.name}' selected hero '${hero.name}'")
+        player.closeInventory()
+        player.sendMessage("Selected hero ${hero.name}!")
     }
 
     @EventHandler
