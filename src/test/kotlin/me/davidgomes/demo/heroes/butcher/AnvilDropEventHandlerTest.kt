@@ -83,7 +83,6 @@ class AnvilDropEventHandlerTest {
 
     @Nested
     inner class OnAnvilHit {
-
         @Test
         fun `damages nearby entities`() {
             val sender = spyk(server.addPlayer("sender"))

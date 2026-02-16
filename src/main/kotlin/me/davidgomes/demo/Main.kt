@@ -30,13 +30,14 @@ open class Main : JavaPlugin() {
 
         val commandsToRegister = arrayOf(mapCreationCommands.createMap)
 
-        val eventHandlers = listOf(
-            AnvilDropEventHandler(this, logger),
-            MapCreationInteractions(mapCreationManager),
-            ArenaEventHandler(logger, arenaManager, heroSelectorInventory)
-        )
+        val eventHandlers =
+            listOf(
+                AnvilDropEventHandler(this, logger),
+                MapCreationInteractions(mapCreationManager),
+                ArenaEventHandler(logger, arenaManager, heroSelectorInventory),
+            )
 
-        eventHandlers.forEach { server.pluginManager.registerEvents(it, this)}
+        eventHandlers.forEach { server.pluginManager.registerEvents(it, this) }
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commandsRegister ->
             commandsRegister.registrar().run {

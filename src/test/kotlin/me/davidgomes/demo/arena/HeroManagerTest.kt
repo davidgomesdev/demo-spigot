@@ -40,10 +40,11 @@ class HeroManagerTest {
 
         heroManager.setHero(player, hero)
 
-        val storedHero = player.persistentDataContainer.get(
-            NamespacedKey(plugin, "hero"),
-            PersistentDataType.STRING
-        )
+        val storedHero =
+            player.persistentDataContainer.get(
+                NamespacedKey(plugin, "hero"),
+                PersistentDataType.STRING,
+            )
 
         assertEquals(hero.name, storedHero)
     }
@@ -76,7 +77,7 @@ class HeroManagerTest {
         player.persistentDataContainer.set(
             NamespacedKey(plugin, "hero"),
             PersistentDataType.STRING,
-            "NonExistentHero"
+            "NonExistentHero",
         )
 
         val hero = heroManager.getHero(player)

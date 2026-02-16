@@ -7,6 +7,6 @@ object ButcherHero : Hero(
     ButcherItems.selectorItem,
     listOf(
         ButcherItems.meatCleaver,
-        ButcherItems.anvilDropItem
-    )
+        ButcherItems.anvilDropItem,
+    ),
 )
