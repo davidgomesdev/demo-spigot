@@ -7,6 +7,7 @@ import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.ARENA_STARTED
 import me.davidgomes.demo.messages.YOU_LOST
 import me.davidgomes.demo.messages.YOU_WON
+import org.bukkit.GameMode
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -71,6 +72,8 @@ class ArenaManager(
         val team = players.minBy { it.value.size }.key
 
         players[team]?.add(player) ?: players.put(team, mutableListOf(player))
+
+        player.gameMode = GameMode.ADVENTURE
 
         player.inventory.clear()
         player.inventory.setItem(0, ArenaItems.heroSelector)
