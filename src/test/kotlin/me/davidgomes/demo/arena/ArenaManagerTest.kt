@@ -3,8 +3,11 @@ package me.davidgomes.demo.arena
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.verify
 import me.davidgomes.demo.Main
+import me.davidgomes.demo.heroes.butcher.ButcherHero
 import me.davidgomes.demo.heroes.setEntitySender
+import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Entity
 import org.bukkit.persistence.PersistentDataContainer
@@ -14,6 +17,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
 import org.mockbukkit.mockbukkit.entity.FallingBlockMock
+import org.mockbukkit.mockbukkit.inventory.ItemStackMock
 import java.util.*
 import java.util.logging.Logger
 import kotlin.test.*
@@ -22,14 +26,18 @@ class ArenaManagerTest {
     lateinit var arenaManager: ArenaManager
     lateinit var server: ServerMock
     lateinit var plugin: Main
+    lateinit var heroManager: HeroManager
 
     @BeforeTest
     fun setUp() {
         MockBukkit.mock()
         server = ServerMock()
         plugin = spyk(MockBukkit.load(Main::class.java))
+
         val logger = Logger.getLogger("ArenaManagerTest")
-        arenaManager = ArenaManager(plugin, logger, HeroManager(plugin, logger))
+
+        heroManager = spyk(HeroManager(plugin, logger))
+        arenaManager = ArenaManager(plugin, logger, heroManager)
 
         every { plugin.server } returns server
     }
@@ -71,6 +79,21 @@ class ArenaManagerTest {
         assertTrue(arenaManager.getPlayersInTeam(Team.Blue).contains(newPlayer))
         assertEquals(2, arenaManager.getTeamSize(Team.Blue))
         assertEquals(2, arenaManager.getTeamSize(Team.Yellow))
+    }
+
+    @Test
+    fun `joinArena gives the start arena and hero selector items and sets a hero`() {
+        val player = spyk(server.addPlayer())
+        val inventory = spyk(player.inventory)
+
+        every { player.inventory } returns inventory
+
+        arenaManager.joinArena(player)
+
+        verify { inventory.clear() }
+        verify { inventory.setItem(0, ArenaItems.heroSelector) }
+        verify { inventory.setItem(1, ArenaItems.start) }
+        verify { heroManager.setHero(player, any()) }
     }
 
     @Test
@@ -438,5 +461,78 @@ class ArenaManagerTest {
         val bluePlayers = arenaManager.getPlayersInTeam(Team.Blue)
 
         assertEquals(0, bluePlayers.size)
+    }
+
+    @Nested
+    inner class SetHeroByItem {
+        @Test
+        fun `returns null when player is not in arena`() {
+            val player = server.addPlayer()
+            val heroItem = ButcherHero.selectorItem
+
+            val result = assertDoesNotThrow { arenaManager.setHeroByItem(player, heroItem) }
+
+            assertNull(result)
+        }
+
+        @Test
+        fun `returns null when item is not a valid hero selector`() {
+            val player = server.addPlayer()
+            arenaManager.joinArena(player)
+
+            val invalidItem = ItemStackMock(Material.DIAMOND_SWORD)
+
+            val result = assertDoesNotThrow { arenaManager.setHeroByItem(player, invalidItem) }
+
+            assertNull(result)
+        }
+
+        @Test
+        fun `sets hero when item is valid hero selector and player is in arena`() {
+            val player = server.addPlayer()
+            arenaManager.joinArena(player)
+
+            val heroItem = ButcherHero.selectorItem
+
+            val result = arenaManager.setHeroByItem(player, heroItem)
+
+            assertNotNull(result)
+            assertEquals(ButcherHero, result)
+        }
+
+        @Test
+        fun `calls heroManager setHero when item is valid`() {
+            val player = server.addPlayer()
+            arenaManager.joinArena(player)
+
+            val heroItem = ButcherHero.selectorItem
+
+            arenaManager.setHeroByItem(player, heroItem)
+
+            verify { heroManager.setHero(player, ButcherHero) }
+        }
+
+        @Test
+        fun `does not call heroManager setHero when player not in arena`() {
+            val player = server.addPlayer()
+            val heroItem = ButcherHero.selectorItem
+
+            assertDoesNotThrow { arenaManager.setHeroByItem(player, heroItem) }
+
+            verify(exactly = 0) { heroManager.setHero(any(), any()) }
+        }
+
+        @Test
+        fun `does not call heroManager setHero when item is invalid`() {
+            val player = server.addPlayer()
+            arenaManager.joinArena(player)
+
+            val invalidItem = ItemStackMock(Material.DIAMOND_SWORD)
+
+            arenaManager.setHeroByItem(player, invalidItem)
+
+            // Only the initial setHero from joinArena
+            verify(exactly = 1) { heroManager.setHero(player, any()) }
+        }
     }
 }

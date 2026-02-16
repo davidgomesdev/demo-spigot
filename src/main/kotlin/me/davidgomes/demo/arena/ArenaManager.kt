@@ -1,11 +1,13 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.heroes.Hero
 import me.davidgomes.demo.heroes.getSenderOf
 import me.davidgomes.demo.messages.ARENA_STARTED
 import me.davidgomes.demo.messages.YOU_LOST
 import me.davidgomes.demo.messages.YOU_WON
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 import java.util.logging.Logger
 
@@ -50,10 +52,27 @@ class ArenaManager(
         val team = players.minBy { it.value.size }.key
 
         players[team]?.add(player) ?: players.put(team, mutableListOf(player))
+
         player.inventory.clear()
-        player.inventory.setItem(0, ArenaItems.start)
+        player.inventory.setItem(0, ArenaItems.heroSelector)
+        player.inventory.setItem(1, ArenaItems.start)
+
+        heroManager.setHero(player, Hero.list.random())
 
         return team
+    }
+
+    fun setHeroByItem(player: Player, heroSelectorItem: ItemStack): Hero? {
+        if (!isInArena(player)) {
+            logger.warning("Tried setting hero for player '${player.name}' but they are not in any arena")
+            return null
+        }
+
+        val hero = Hero.from(heroSelectorItem) ?: return null
+
+        heroManager.setHero(player, hero)
+
+        return hero
     }
 
     /*

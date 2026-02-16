@@ -1,5 +1,6 @@
 package me.davidgomes.demo.arena
 
+import io.mockk.spyk
 import me.davidgomes.demo.Main
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
@@ -32,17 +33,21 @@ class ArenaEventHandlerTest {
     private lateinit var server: ServerMock
     private lateinit var arenaManager: ArenaManager
     private lateinit var handler: ArenaEventHandler
+    private lateinit var heroSelectorInventory: HeroSelectorInventory
 
     @BeforeEach
     fun setUp() {
         val logger = Logger.getLogger("ArenaEventHandlerTest")
 
         server = MockBukkit.mock()
+
         val plugin = MockBukkit.load(Main::class.java)
+
         arenaManager = ArenaManager(
             plugin, logger, HeroManager(plugin, logger)
         )
-        handler = ArenaEventHandler(logger, arenaManager)
+        heroSelectorInventory = spyk(HeroSelectorInventory(server))
+        handler = ArenaEventHandler(logger, arenaManager, heroSelectorInventory)
     }
 
     @AfterEach
@@ -205,7 +210,7 @@ class ArenaEventHandlerTest {
     }
 
     @Nested
-    inner class Match {
+    inner class InsideArena {
         @Test
         fun `onPlayerInteractWithArenaStart does nothing for left click`() {
             val player = server.addPlayer()

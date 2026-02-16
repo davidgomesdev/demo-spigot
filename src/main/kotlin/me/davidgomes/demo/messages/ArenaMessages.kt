@@ -8,5 +8,8 @@ const val NOT_IN_ARENA = "You are NOT in the arena!"
 const val ALREADY_IN_ARENA = "You are already in the arena!"
 const val JOINED_ARENA = "You have joined the arena!"
 const val ARENA_STARTED = "Arena has started!"
+
+const val CLICK_ON_UNEXISTENT_HERO = "I don't know what you're clicking on, but it's not a hero!"
+
 val YOU_LOST = Component.text("You lost! Better luck next time...", NamedTextColor.GRAY)
 val YOU_WON = Component.text("Congratulations! You won the arena match!", NamedTextColor.YELLOW)
