@@ -118,7 +118,7 @@ class AnvilDropEventHandler(
 
         setEntitySender(plugin, anvil, sender)
 
-        // Damaged is done in the EntityChangeBlockEvent
+        // Damage is done in the EntityChangeBlockEvent
         anvil.setHurtEntities(false)
         anvil.velocity = Vector(0.0, AnvilAbilityAttributes.FALL_SPEED_MODIFIER, 0.0)
     }

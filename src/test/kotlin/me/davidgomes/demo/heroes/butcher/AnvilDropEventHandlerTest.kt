@@ -19,11 +19,13 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
+import org.junit.jupiter.api.Nested
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
 import org.mockbukkit.mockbukkit.entity.FallingBlockMock
 import org.mockbukkit.mockbukkit.entity.PlayerMock
 import org.mockbukkit.mockbukkit.inventory.ItemStackMock
+import org.mockbukkit.mockbukkit.world.WorldMock
 import java.util.logging.Logger
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -36,12 +38,14 @@ class AnvilDropEventHandlerTest {
     private lateinit var plugin: Plugin
     private lateinit var logger: Logger
     private lateinit var handler: AnvilDropEventHandler
+    private lateinit var world: WorldMock
 
     @BeforeTest
     fun setUp() {
         logger = Logger.getLogger("AnvilDropEventHandlerTest")
 
         server = MockBukkit.mock()
+        world = spyk(server.addSimpleWorld("world"))
         plugin = MockBukkit.load(Main::class.java)
 
         handler = AnvilDropEventHandler(plugin, logger)
@@ -52,140 +56,148 @@ class AnvilDropEventHandlerTest {
         MockBukkit.unmock()
     }
 
-    @Test
-    fun `onPlayerRightClickAnvil does nothing when item is not anvil`() {
-        val item = ItemStackMock(Material.DIAMOND_SWORD)
-        val player = server.addPlayer()
-        val event = spyk(PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, item, null, BlockFace.NORTH))
+    @Nested
+    inner class OnAnvilTrigger {
+        @Test
+        fun `does nothing when item is not anvil`() {
+            val item = ItemStackMock(Material.DIAMOND_SWORD)
+            val player = server.addPlayer()
+            val event = spyk(PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, item, null, BlockFace.NORTH))
 
-        handler.onPlayerRightClickAnvil(event)
+            handler.onPlayerRightClickAnvil(event)
 
-        verify(exactly = 0) { event.isCancelled = any() }
-    }
-
-    @Test
-    fun `onPlayerRightClickAnvil does nothing when action is not right click`() {
-        val item = ItemStackMock(Material.ANVIL)
-        val player = server.addPlayer()
-        val event = spyk(PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, item, null, BlockFace.NORTH))
-
-        verify(exactly = 0) { event.isCancelled = any() }
-    }
-
-    @Test
-    fun `onAnvilHit damages nearby entities`() {
-        val sender = spyk(server.addPlayer("sender"))
-
-        // needed because this is not implemented in MockBukkit
-        every { sender.facing } returns BlockFace.EAST
-
-        val world = spyk(sender.world)
-        val hitLocation = Location(world, 10.0, 65.0, 10.0)
-
-        val target =
-            spyk(PlayerMock(server, "target")).apply {
-                location = hitLocation
-            }
-
-        // Fixes Stackoverflow on LivingEntityMock.isDead 🤷
-        every { target.isDead } returns false
-
-        server.addPlayer(target)
-
-        val block = spyk(world.spawn(hitLocation, FallingBlockMock::class.java))
-        val event = spyk(EntityChangeBlockEvent(block, block.location.block, block.blockData))
-
-        handler.setAnvilProperties(block, sender)
-
-        handler.onAnvilHit(event)
-
-        verify {
-            target.damage(
-                AnvilAbilityAttributes.Landing.DROP_DAMAGE,
-                match<Entity> { it.name == "sender" },
-            )
+            verify(exactly = 0) { event.isCancelled = any() }
         }
-        verify { world.playEffect(hitLocation, Effect.ANVIL_LAND, null) }
-        verify { world.playSound(hitLocation, Sound.BLOCK_ANVIL_HIT, any(), any()) }
-        verify { event.isCancelled = true }
+
+        @Test
+        fun `does nothing when action is not right click`() {
+            val item = ItemStackMock(Material.ANVIL)
+            val player = server.addPlayer()
+            val event = spyk(PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, item, null, BlockFace.NORTH))
+
+            handler.onPlayerRightClickAnvil(event)
+
+            verify(exactly = 0) { event.isCancelled = any() }
+        }
     }
 
-    @Test
-    fun `onAnvilHit does nothing when entity is not falling block`() {
-        val entity = mockk<Player>(relaxed = true)
-        val block = mockk<Block>(relaxed = true)
-        val event = mockk<EntityChangeBlockEvent>(relaxed = true)
+    @Nested
+    inner class OnAnvilHit {
 
-        every { event.entity } returns entity
-        every { entity.type } returns EntityType.PLAYER
-        every { event.block } returns block
-        every { block.type } returns Material.AIR
+        @Test
+        fun `damages nearby entities`() {
+            val sender = spyk(server.addPlayer("sender"))
 
-        handler.onAnvilHit(event)
+            // needed because this is not implemented in MockBukkit
+            every { sender.facing } returns BlockFace.EAST
 
-        verify(exactly = 0) { event.isCancelled = any() }
-    }
+            val world = spyk(sender.world)
+            val hitLocation = Location(world, 10.0, 65.0, 10.0)
 
-    @Test
-    fun `onAnvilHit does nothing when block is not air`() {
-        val fallingBlock = mockk<FallingBlock>(relaxed = true)
-        val block = mockk<Block>(relaxed = true)
-        val event = mockk<EntityChangeBlockEvent>(relaxed = true)
+            val target =
+                spyk(PlayerMock(server, "target")).apply {
+                    location = hitLocation
+                }
 
-        every { event.entity } returns fallingBlock
-        every { fallingBlock.type } returns EntityType.FALLING_BLOCK
-        every { event.block } returns block
-        every { block.type } returns Material.STONE
+            // Fixes Stackoverflow on LivingEntityMock.isDead 🤷
+            every { target.isDead } returns false
 
-        handler.onAnvilHit(event)
+            server.addPlayer(target)
 
-        verify(exactly = 0) { event.isCancelled = any() }
-    }
+            val block = spyk(world.spawn(hitLocation, FallingBlockMock::class.java))
+            val event = spyk(EntityChangeBlockEvent(block, block.location.block, block.blockData))
 
-    @Test
-    fun `onAnvilHit does nothing when falling block is not anvil`() {
-        val fallingBlock = mockk<FallingBlock>(relaxed = true)
-        val block = mockk<Block>(relaxed = true)
-        val blockData = mockk<BlockData>(relaxed = true)
-        val event = mockk<EntityChangeBlockEvent>(relaxed = true)
+            handler.setAnvilProperties(block, sender)
+            handler.onAnvilHit(event)
 
-        every { event.entity } returns fallingBlock
-        every { fallingBlock.type } returns EntityType.FALLING_BLOCK
-        every { event.block } returns block
-        every { block.type } returns Material.AIR
-        every { fallingBlock.blockData } returns blockData
-        every { blockData.material } returns Material.SAND
+            verify {
+                target.damage(
+                    AnvilAbilityAttributes.Landing.DROP_DAMAGE,
+                    match<Entity> { it.name == "sender" },
+                )
+            }
+            verify { world.playEffect(hitLocation, Effect.ANVIL_LAND, null) }
+            verify { world.playSound(hitLocation, Sound.BLOCK_ANVIL_HIT, any(), any()) }
+            verify { event.isCancelled = true }
+        }
 
-        handler.onAnvilHit(event)
+        @Test
+        fun `does nothing when entity is not falling block`() {
+            val entity = mockk<Player>(relaxed = true)
+            val block = mockk<Block>(relaxed = true)
+            val event = mockk<EntityChangeBlockEvent>(relaxed = true)
 
-        verify(exactly = 0) { event.isCancelled = any() }
-    }
+            every { event.entity } returns entity
+            every { entity.type } returns EntityType.PLAYER
+            every { event.block } returns block
+            every { block.type } returns Material.AIR
 
-    @Test
-    fun `onAnvilHit does nothing when sender not found`() {
-        val world = mockk<World>(relaxed = true)
-        val fallingBlock = mockk<FallingBlock>(relaxed = true)
-        val block = mockk<Block>(relaxed = true)
-        val blockData = mockk<BlockData>(relaxed = true)
-        val persistentDataContainer = mockk<PersistentDataContainer>(relaxed = true)
-        val event = mockk<EntityChangeBlockEvent>(relaxed = true)
-        val hitLocation = Location(world, 10.0, 65.0, 10.0)
+            handler.onAnvilHit(event)
 
-        every { event.entity } returns fallingBlock
-        every { event.block } returns block
-        every { block.type } returns Material.AIR
-        every { fallingBlock.type } returns EntityType.FALLING_BLOCK
-        every { fallingBlock.blockData } returns blockData
-        every { blockData.material } returns Material.ANVIL
-        every { fallingBlock.location } returns hitLocation
-        every { fallingBlock.persistentDataContainer } returns persistentDataContainer
+            verify(exactly = 0) { event.isCancelled = any() }
+        }
 
-        every {
-            persistentDataContainer.get(any<NamespacedKey>(), PersistentDataType.STRING)
-        } returns null
+        @Test
+        fun `does nothing when block is not air`() {
+            val fallingBlock = mockk<FallingBlock>(relaxed = true)
+            val block = mockk<Block>(relaxed = true)
+            val event = mockk<EntityChangeBlockEvent>(relaxed = true)
 
-        handler.onAnvilHit(event)
+            every { event.entity } returns fallingBlock
+            every { fallingBlock.type } returns EntityType.FALLING_BLOCK
+            every { event.block } returns block
+            every { block.type } returns Material.STONE
 
-        verify(exactly = 0) { event.isCancelled = any() }
+            handler.onAnvilHit(event)
+
+            verify(exactly = 0) { event.isCancelled = any() }
+        }
+
+        @Test
+        fun `does nothing when falling block is not anvil`() {
+            val fallingBlock = mockk<FallingBlock>(relaxed = true)
+            val block = mockk<Block>(relaxed = true)
+            val blockData = mockk<BlockData>(relaxed = true)
+            val event = mockk<EntityChangeBlockEvent>(relaxed = true)
+
+            every { event.entity } returns fallingBlock
+            every { fallingBlock.type } returns EntityType.FALLING_BLOCK
+            every { event.block } returns block
+            every { block.type } returns Material.AIR
+            every { fallingBlock.blockData } returns blockData
+            every { blockData.material } returns Material.SAND
+
+            handler.onAnvilHit(event)
+
+            verify(exactly = 0) { event.isCancelled = any() }
+        }
+
+        @Test
+        fun `does nothing when sender not found`() {
+            val world = mockk<World>(relaxed = true)
+            val fallingBlock = mockk<FallingBlock>(relaxed = true)
+            val block = mockk<Block>(relaxed = true)
+            val blockData = mockk<BlockData>(relaxed = true)
+            val persistentDataContainer = mockk<PersistentDataContainer>(relaxed = true)
+            val event = mockk<EntityChangeBlockEvent>(relaxed = true)
+            val hitLocation = Location(world, 10.0, 65.0, 10.0)
+
+            every { event.entity } returns fallingBlock
+            every { event.block } returns block
+            every { block.type } returns Material.AIR
+            every { fallingBlock.type } returns EntityType.FALLING_BLOCK
+            every { fallingBlock.blockData } returns blockData
+            every { blockData.material } returns Material.ANVIL
+            every { fallingBlock.location } returns hitLocation
+            every { fallingBlock.persistentDataContainer } returns persistentDataContainer
+
+            every {
+                persistentDataContainer.get(any<NamespacedKey>(), PersistentDataType.STRING)
+            } returns null
+
+            handler.onAnvilHit(event)
+
+            verify(exactly = 0) { event.isCancelled = any() }
+        }
     }
 }
