@@ -44,15 +44,16 @@ class ArenaManagerTest {
         heroManager = spyk(HeroManager(plugin, logger))
         mapManager = mockk(relaxUnitFun = true)
 
-        every { mapManager.getAllMaps() } returns listOf(
-            GameMap(
-                "test_map",
-                mapOf(
-                    Team.Yellow to Location(server.addSimpleWorld("test_world"), 0.0, 65.0, 0.0),
-                    Team.Blue to Location(server.addSimpleWorld("test_world"), 10.0, 65.0, 0.0),
-                )
+        every { mapManager.getAllMaps() } returns
+            listOf(
+                GameMap(
+                    "test_map",
+                    mapOf(
+                        Team.Yellow to Location(server.addSimpleWorld("test_world"), 0.0, 65.0, 0.0),
+                        Team.Blue to Location(server.addSimpleWorld("test_world"), 10.0, 65.0, 0.0),
+                    ),
+                ),
             )
-        )
 
         arenaManager = ArenaManager(plugin, logger, heroManager, mapManager)
 
@@ -163,10 +164,11 @@ class ArenaManagerTest {
         @Test
         fun `startArena clears player inventory and sets state to ongoing TDM`() {
             val world = server.addSimpleWorld("test_world")
-            val teamSpawns = mapOf(
-                Team.Yellow to Location(world, 0.0, 65.0, 0.0),
-                Team.Blue to Location(world, 10.0, 65.0, 0.0),
-            )
+            val teamSpawns =
+                mapOf(
+                    Team.Yellow to Location(world, 0.0, 65.0, 0.0),
+                    Team.Blue to Location(world, 10.0, 65.0, 0.0),
+                )
             val gameMap = GameMap("test_map", teamSpawns)
 
             every { mapManager.getAllMaps() } returns listOf(gameMap)
@@ -199,10 +201,11 @@ class ArenaManagerTest {
             val world = server.addSimpleWorld("test_world")
             val yellowSpawn = Location(world, 0.0, 65.0, 0.0)
             val blueSpawn = Location(world, 10.0, 65.0, 0.0)
-            val teamSpawns = mapOf(
-                Team.Yellow to yellowSpawn,
-                Team.Blue to blueSpawn,
-            )
+            val teamSpawns =
+                mapOf(
+                    Team.Yellow to yellowSpawn,
+                    Team.Blue to blueSpawn,
+                )
             val gameMap = GameMap("test_map", teamSpawns)
 
             every { mapManager.getAllMaps() } returns listOf(gameMap)
@@ -227,10 +230,11 @@ class ArenaManagerTest {
         @Test
         fun `startArena uses existing hero for player if set`() {
             val world = server.addSimpleWorld("test_world")
-            val teamSpawns = mapOf(
-                Team.Yellow to Location(world, 0.0, 65.0, 0.0),
-                Team.Blue to Location(world, 10.0, 65.0, 0.0),
-            )
+            val teamSpawns =
+                mapOf(
+                    Team.Yellow to Location(world, 0.0, 65.0, 0.0),
+                    Team.Blue to Location(world, 10.0, 65.0, 0.0),
+                )
             val gameMap = GameMap("test_map", teamSpawns)
 
             every { mapManager.getAllMaps() } returns listOf(gameMap)
@@ -252,10 +256,11 @@ class ArenaManagerTest {
         @Test
         fun `startArena sets hero items to player inventory`() {
             val world = server.addSimpleWorld("test_world")
-            val teamSpawns = mapOf(
-                Team.Yellow to Location(world, 0.0, 65.0, 0.0),
-                Team.Blue to Location(world, 10.0, 65.0, 0.0),
-            )
+            val teamSpawns =
+                mapOf(
+                    Team.Yellow to Location(world, 0.0, 65.0, 0.0),
+                    Team.Blue to Location(world, 10.0, 65.0, 0.0),
+                )
             val gameMap = GameMap("test_map", teamSpawns)
 
             every { mapManager.getAllMaps() } returns listOf(gameMap)
@@ -388,7 +393,11 @@ class ArenaManagerTest {
             arenaManager.joinArena(yellowPlayer) // Yellow team
             arenaManager.joinArena(bluePlayer) // Blue team
 
-            val testScoreboard = Team.entries.associateWith { java.util.concurrent.atomic.AtomicInteger(0) }
+            val testScoreboard =
+                Team.entries.associateWith {
+                    java.util.concurrent.atomic
+                        .AtomicInteger(0)
+                }
             val testState = ArenaState.OnGoingTeamDeathMatch(scoreGoal = 5, scoreboard = testScoreboard)
 
             val stateField = ArenaManager::class.java.getDeclaredField("state")

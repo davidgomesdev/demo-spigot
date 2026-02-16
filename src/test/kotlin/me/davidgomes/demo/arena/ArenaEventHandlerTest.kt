@@ -53,19 +53,24 @@ class ArenaEventHandlerTest {
 
         val world = server.addSimpleWorld("world")
 
-        every { mapManager.getAllMaps() } returns listOf(
-            GameMap(
-                "TestMap",
-                mapOf(
-                    Team.Blue to Location(world, 0.0, 64.0, 0.0),
-                    Team.Yellow to Location(world, 5.0, 64.0, 5.0),
-                )
+        every { mapManager.getAllMaps() } returns
+            listOf(
+                GameMap(
+                    "TestMap",
+                    mapOf(
+                        Team.Blue to Location(world, 0.0, 64.0, 0.0),
+                        Team.Yellow to Location(world, 5.0, 64.0, 5.0),
+                    ),
+                ),
             )
-        )
 
-        arenaManager = ArenaManager(
-            plugin, logger, HeroManager(plugin, logger), mapManager
-        )
+        arenaManager =
+            ArenaManager(
+                plugin,
+                logger,
+                HeroManager(plugin, logger),
+                mapManager,
+            )
         heroSelectorInventory = spyk(HeroSelectorInventory(server))
         handler = ArenaEventHandler(logger, arenaManager, heroSelectorInventory)
     }
@@ -315,14 +320,15 @@ class ArenaEventHandlerTest {
             val player = server.addPlayer()
             val killer = server.addPlayer()
 
-            val event = PlayerDeathEvent(
-                player,
-                DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
-                emptyList<ItemStack>(),
-                0,
-                Component.text(""),
-                false
-            )
+            val event =
+                PlayerDeathEvent(
+                    player,
+                    DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
+                    emptyList<ItemStack>(),
+                    0,
+                    Component.text(""),
+                    false,
+                )
 
             assertDoesNotThrow {
                 handler.onPlayerDeath(event)
@@ -340,14 +346,15 @@ class ArenaEventHandlerTest {
 
             assertFalse(arenaManager.isMatchOnGoing())
 
-            val event = PlayerDeathEvent(
-                player,
-                DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
-                emptyList<ItemStack>(),
-                0,
-                Component.text(""),
-                false
-            )
+            val event =
+                PlayerDeathEvent(
+                    player,
+                    DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
+                    emptyList<ItemStack>(),
+                    0,
+                    Component.text(""),
+                    false,
+                )
 
             assertDoesNotThrow {
                 handler.onPlayerDeath(event)
@@ -369,14 +376,15 @@ class ArenaEventHandlerTest {
 
             stateBefore.scoreboard.values.forEach { assertEquals(0, it.get()) }
 
-            val event = PlayerDeathEvent(
-                victim,
-                DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
-                emptyList<ItemStack>(),
-                0,
-                Component.text(""),
-                false
-            )
+            val event =
+                PlayerDeathEvent(
+                    victim,
+                    DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(killer).build(),
+                    emptyList<ItemStack>(),
+                    0,
+                    Component.text(""),
+                    false,
+                )
 
             handler.onPlayerDeath(event)
 
@@ -392,13 +400,15 @@ class ArenaEventHandlerTest {
             arenaManager.joinArena(server.addPlayer())
             arenaManager.startArena(GameType.TeamDeathMatch)
 
-            val event = PlayerDeathEvent(
-                victim, DamageSource.builder(DamageType.FALL).build(),
-                emptyList<ItemStack>(),
-                0,
-                Component.text(""),
-                false
-            )
+            val event =
+                PlayerDeathEvent(
+                    victim,
+                    DamageSource.builder(DamageType.FALL).build(),
+                    emptyList<ItemStack>(),
+                    0,
+                    Component.text(""),
+                    false,
+                )
 
             handler.onPlayerDeath(event)
 

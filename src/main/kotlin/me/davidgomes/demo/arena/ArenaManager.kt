@@ -54,10 +54,11 @@ class ArenaManager(
         }
     }
 
-    fun isReadyToStart(): Boolean = when (state) {
-        is ArenaState.Lobby -> players.values.all { it.isNotEmpty() }
-        else -> false
-    }
+    fun isReadyToStart(): Boolean =
+        when (state) {
+            is ArenaState.Lobby -> players.values.all { it.isNotEmpty() }
+            else -> false
+        }
 
     fun addItemToJoinArena(player: Player) {
         player.inventory.apply {
@@ -80,7 +81,10 @@ class ArenaManager(
         return team
     }
 
-    fun setHeroByItem(player: Player, heroSelectorItem: ItemStack): Hero? {
+    fun setHeroByItem(
+        player: Player,
+        heroSelectorItem: ItemStack,
+    ): Hero? {
         if (!isInArena(player)) {
             logger.warning("Tried setting hero for player '${player.name}' but they are not in any arena")
             return null
@@ -120,13 +124,16 @@ class ArenaManager(
 
     fun getPlayersInTeam(team: Team): List<Player> = players[team]?.toList() ?: emptyList()
 
-    fun onPlayerKilledByEntity(deadPlayer: Player, executor: Entity) {
+    fun onPlayerKilledByEntity(
+        deadPlayer: Player,
+        executor: Entity,
+    ) {
         val sender = getSenderOf(plugin, executor)
 
         if (sender == null) {
             logger.warning(
                 "Player '${deadPlayer.name}' was killed by an entity" +
-                        " (${executor.type}) in an arena match, but the sender could not be identified, ignoring"
+                    " (${executor.type}) in an arena match, but the sender could not be identified, ignoring",
             )
             return
         }
@@ -136,11 +143,14 @@ class ArenaManager(
         onPlayerKilledByPlayer(deadPlayer, sender)
     }
 
-    fun onPlayerKilledByPlayer(deadPlayer: Player, executor: Player) {
+    fun onPlayerKilledByPlayer(
+        deadPlayer: Player,
+        executor: Player,
+    ) {
         if (!isMatchOnGoing()) {
             logger.warning(
                 "Player '${executor.name}' killed player '${deadPlayer.name}' " +
-                        "but the match is not on going, this should be avoided"
+                    "but the match is not on going, this should be avoided",
             )
             return
         }
@@ -170,7 +180,7 @@ class ArenaManager(
             }
 
             else -> throw NotImplementedError(
-                "Game type ${currentState::class} not yet implemented"
+                "Game type ${currentState::class} not yet implemented",
             )
         }
     }
@@ -184,4 +194,3 @@ class ArenaManager(
             }
     }
 }
-

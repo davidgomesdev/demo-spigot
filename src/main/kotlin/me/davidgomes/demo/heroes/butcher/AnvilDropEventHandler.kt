@@ -26,7 +26,6 @@ class AnvilDropEventHandler(
     val plugin: Plugin,
     val logger: Logger,
 ) : Listener {
-
     @EventHandler
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
         if (evt.isNotRightClick()) return

@@ -16,7 +16,7 @@ import java.util.logging.Logger
 class ArenaEventHandler(
     val logger: Logger,
     val arenaManager: ArenaManager,
-    val heroSelectorInventory: HeroSelectorInventory
+    val heroSelectorInventory: HeroSelectorInventory,
 ) : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
