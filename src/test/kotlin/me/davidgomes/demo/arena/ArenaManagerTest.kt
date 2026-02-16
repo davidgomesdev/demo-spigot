@@ -10,6 +10,7 @@ import me.davidgomes.demo.heroes.setEntitySender
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.ARENA_STARTED
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -100,7 +101,7 @@ class ArenaManagerTest {
     }
 
     @Test
-    fun `joinArena gives the start arena and hero selector items and sets a hero`() {
+    fun `joinArena gives the start arena and hero selector items, sets a hero and gamemode to adventure`() {
         val player = spyk(server.addPlayer())
         val inventory = spyk(player.inventory)
 
@@ -112,6 +113,7 @@ class ArenaManagerTest {
         verify { inventory.setItem(0, ArenaItems.heroSelector) }
         verify { inventory.setItem(1, ArenaItems.start) }
         verify { heroManager.setHero(player, any()) }
+        verify { player.gameMode = GameMode.ADVENTURE }
     }
 
     @Test
