@@ -20,13 +20,13 @@ open class Main : JavaPlugin() {
     override fun onEnable() {
         ConfigurationSerialization.registerClass(GameMap::class.java)
 
-        val heroManager = HeroManager(this, logger)
-        val arenaManager = ArenaManager(this, logger, heroManager)
-        val heroSelectorInventory = HeroSelectorInventory(server)
-
         val mapManager = MapManager(logger, getConfigFile("maps.yml"))
         val mapCreationManager = MapCreationManager(logger, mapManager)
         val mapCreationCommands = MapCreationCommands(logger, mapCreationManager)
+
+        val heroManager = HeroManager(this, logger)
+        val arenaManager = ArenaManager(this, logger, heroManager, mapManager)
+        val heroSelectorInventory = HeroSelectorInventory(server)
 
         val commandsToRegister = arrayOf(mapCreationCommands.createMap)
 
