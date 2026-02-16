@@ -7,6 +7,10 @@ import io.mockk.verify
 import me.davidgomes.demo.Main
 import me.davidgomes.demo.heroes.butcher.ButcherHero
 import me.davidgomes.demo.heroes.setEntitySender
+import me.davidgomes.demo.map.GameMap
+import me.davidgomes.demo.map.MapManager
+import me.davidgomes.demo.messages.ARENA_STARTED
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Entity
@@ -27,6 +31,7 @@ class ArenaManagerTest {
     lateinit var server: ServerMock
     lateinit var plugin: Main
     lateinit var heroManager: HeroManager
+    lateinit var mapManager: MapManager
 
     @BeforeTest
     fun setUp() {
@@ -37,7 +42,19 @@ class ArenaManagerTest {
         val logger = Logger.getLogger("ArenaManagerTest")
 
         heroManager = spyk(HeroManager(plugin, logger))
-        arenaManager = ArenaManager(plugin, logger, heroManager)
+        mapManager = mockk(relaxUnitFun = true)
+
+        every { mapManager.getAllMaps() } returns listOf(
+            GameMap(
+                "test_map",
+                mapOf(
+                    Team.Yellow to Location(server.addSimpleWorld("test_world"), 0.0, 65.0, 0.0),
+                    Team.Blue to Location(server.addSimpleWorld("test_world"), 10.0, 65.0, 0.0),
+                )
+            )
+        )
+
+        arenaManager = ArenaManager(plugin, logger, heroManager, mapManager)
 
         every { plugin.server } returns server
     }
@@ -145,8 +162,20 @@ class ArenaManagerTest {
     inner class Match {
         @Test
         fun `startArena clears player inventory and sets state to ongoing TDM`() {
-            val player1 = server.addPlayer()
-            val player2 = server.addPlayer()
+            val world = server.addSimpleWorld("test_world")
+            val teamSpawns = mapOf(
+                Team.Yellow to Location(world, 0.0, 65.0, 0.0),
+                Team.Blue to Location(world, 10.0, 65.0, 0.0),
+            )
+            val gameMap = GameMap("test_map", teamSpawns)
+
+            every { mapManager.getAllMaps() } returns listOf(gameMap)
+
+            val player1 = spyk(server.addPlayer())
+            val player2 = spyk(server.addPlayer())
+
+            every { player1.teleport(any<Location>()) } returns true
+            every { player2.teleport(any<Location>()) } returns true
 
             arenaManager.joinArena(player1)
             arenaManager.joinArena(player2)
@@ -154,8 +183,6 @@ class ArenaManagerTest {
             arenaManager.startArena(GameType.TeamDeathMatch)
 
             assertTrue(arenaManager.isMatchOnGoing())
-            assertTrue(player1.inventory.isEmpty)
-            assertTrue(player2.inventory.isEmpty)
 
             val state = arenaManager.getState()
 
@@ -165,6 +192,90 @@ class ArenaManagerTest {
                 assertNotNull(state.scoreboard[team])
                 assertEquals(0, state.scoreboard[team]?.get())
             }
+        }
+
+        @Test
+        fun `startArena teleports players to their team spawns`() {
+            val world = server.addSimpleWorld("test_world")
+            val yellowSpawn = Location(world, 0.0, 65.0, 0.0)
+            val blueSpawn = Location(world, 10.0, 65.0, 0.0)
+            val teamSpawns = mapOf(
+                Team.Yellow to yellowSpawn,
+                Team.Blue to blueSpawn,
+            )
+            val gameMap = GameMap("test_map", teamSpawns)
+
+            every { mapManager.getAllMaps() } returns listOf(gameMap)
+
+            val yellowTeamPlayer = spyk(server.addPlayer())
+            val blueTeamPlayer = spyk(server.addPlayer())
+
+            every { yellowTeamPlayer.teleport(any<Location>()) } returns true
+            every { blueTeamPlayer.teleport(any<Location>()) } returns true
+
+            arenaManager.joinArena(yellowTeamPlayer)
+            arenaManager.joinArena(blueTeamPlayer)
+
+            arenaManager.startArena(GameType.TeamDeathMatch)
+
+            verify { yellowTeamPlayer.teleport(yellowSpawn) }
+            verify { blueTeamPlayer.teleport(blueSpawn) }
+            verify { yellowTeamPlayer.sendMessage(ARENA_STARTED) }
+            verify { blueTeamPlayer.sendMessage(ARENA_STARTED) }
+        }
+
+        @Test
+        fun `startArena uses existing hero for player if set`() {
+            val world = server.addSimpleWorld("test_world")
+            val teamSpawns = mapOf(
+                Team.Yellow to Location(world, 0.0, 65.0, 0.0),
+                Team.Blue to Location(world, 10.0, 65.0, 0.0),
+            )
+            val gameMap = GameMap("test_map", teamSpawns)
+
+            every { mapManager.getAllMaps() } returns listOf(gameMap)
+
+            val player1 = server.addPlayer()
+            val player2 = server.addPlayer()
+
+            arenaManager.joinArena(player1)
+            arenaManager.joinArena(player2)
+
+            heroManager.setHero(player1, ButcherHero)
+
+            arenaManager.startArena(GameType.TeamDeathMatch)
+
+            val hero = heroManager.getHero(player1)
+            assertEquals(ButcherHero, hero)
+        }
+
+        @Test
+        fun `startArena sets hero items to player inventory`() {
+            val world = server.addSimpleWorld("test_world")
+            val teamSpawns = mapOf(
+                Team.Yellow to Location(world, 0.0, 65.0, 0.0),
+                Team.Blue to Location(world, 10.0, 65.0, 0.0),
+            )
+            val gameMap = GameMap("test_map", teamSpawns)
+
+            every { mapManager.getAllMaps() } returns listOf(gameMap)
+
+            val player1 = server.addPlayer()
+            val player2 = server.addPlayer()
+
+            arenaManager.joinArena(player1)
+            arenaManager.joinArena(player2)
+
+            arenaManager.startArena(GameType.TeamDeathMatch)
+            val hero = assertNotNull(heroManager.getHero(player1))
+
+            assertFalse(player1.inventory.isEmpty)
+
+            hero.items.forEachIndexed { i, item ->
+                assertTrue(player1.inventory.getItem(i) == item)
+            }
+
+            assertFalse(player2.inventory.isEmpty)
         }
 
         @Test
@@ -181,16 +292,29 @@ class ArenaManagerTest {
 
         @Test
         fun `isReadyToStart returns true when all teams have players`() {
-            arenaManager.joinArena(server.addPlayer())
-            arenaManager.joinArena(server.addPlayer())
+            val player1 = spyk(server.addPlayer())
+            val player2 = spyk(server.addPlayer())
+
+            every { player1.teleport(any<Location>()) } returns true
+            every { player2.teleport(any<Location>()) } returns true
+
+            arenaManager.joinArena(player1)
+            arenaManager.joinArena(player2)
 
             assertTrue(arenaManager.isReadyToStart())
         }
 
         @Test
         fun `isReadyToStart returns false when match is already ongoing`() {
-            arenaManager.joinArena(server.addPlayer())
-            arenaManager.joinArena(server.addPlayer())
+            val player1 = spyk(server.addPlayer())
+            val player2 = spyk(server.addPlayer())
+
+            every { player1.teleport(any<Location>()) } returns true
+            every { player2.teleport(any<Location>()) } returns true
+
+            arenaManager.joinArena(player1)
+            arenaManager.joinArena(player2)
+
             arenaManager.startArena(GameType.TeamDeathMatch)
 
             assertFalse(arenaManager.isReadyToStart())
@@ -198,7 +322,7 @@ class ArenaManagerTest {
 
         @Test
         fun `addItemToJoinArena clears inventory and adds join item`() {
-            val player = server.addPlayer()
+            val player = spyk(server.addPlayer())
 
             arenaManager.addItemToJoinArena(player)
 
@@ -212,8 +336,14 @@ class ArenaManagerTest {
 
         @Test
         fun `isMatchOnGoing returns true after starting arena`() {
-            arenaManager.joinArena(server.addPlayer())
-            arenaManager.joinArena(server.addPlayer())
+            val player1 = spyk(server.addPlayer())
+            val player2 = spyk(server.addPlayer())
+
+            every { player1.teleport(any<Location>()) } returns true
+            every { player2.teleport(any<Location>()) } returns true
+
+            arenaManager.joinArena(player1)
+            arenaManager.joinArena(player2)
             arenaManager.startArena(GameType.TeamDeathMatch)
 
             assertTrue(arenaManager.isMatchOnGoing())
@@ -221,8 +351,11 @@ class ArenaManagerTest {
 
         @Test
         fun `match ends when team reaches score goal in TDM`() {
-            val killer = server.addPlayer()
-            val victim = server.addPlayer()
+            val killer = spyk(server.addPlayer())
+            val victim = spyk(server.addPlayer())
+
+            every { killer.teleport(any<Location>()) } returns true
+            every { victim.teleport(any<Location>()) } returns true
 
             arenaManager.joinArena(killer)
             arenaManager.joinArena(victim)
@@ -293,9 +426,15 @@ class ArenaManagerTest {
 
         @Test
         fun `onPlayerKilledByPlayer ignores if killer is the same as victim`() {
-            val player = server.addPlayer()
+            val player = spyk(server.addPlayer())
+            val other = spyk(server.addPlayer())
+
+            every { player.teleport(any<Location>()) } returns true
+            every { other.teleport(any<Location>()) } returns true
+
             arenaManager.joinArena(player)
-            arenaManager.joinArena(server.addPlayer())
+            arenaManager.joinArena(other)
+
             arenaManager.startArena(GameType.TeamDeathMatch)
 
             val stateBefore = arenaManager.getState() as ArenaState.OnGoingTeamDeathMatch
@@ -313,9 +452,13 @@ class ArenaManagerTest {
 
         @Test
         fun `onPlayerKilledByPlayer ignores if players are on same team`() {
-            val firstPlayerYellow = server.addPlayer()
-            val secondPlayerBlue = server.addPlayer()
-            val thirdPlayerYellow = server.addPlayer()
+            val firstPlayerYellow = spyk(server.addPlayer())
+            val secondPlayerBlue = spyk(server.addPlayer())
+            val thirdPlayerYellow = spyk(server.addPlayer())
+
+            every { firstPlayerYellow.teleport(any<Location>()) } returns true
+            every { secondPlayerBlue.teleport(any<Location>()) } returns true
+            every { thirdPlayerYellow.teleport(any<Location>()) } returns true
 
             // Join 3 players so 2 are on the same team
             arenaManager.joinArena(firstPlayerYellow)
@@ -342,8 +485,12 @@ class ArenaManagerTest {
 
         @Test
         fun `onPlayerKilledByPlayer increments score for executor team in TDM`() {
-            val killer = server.addPlayer()
-            val victim = server.addPlayer()
+            val killer = spyk(server.addPlayer())
+            val victim = spyk(server.addPlayer())
+
+            every { killer.teleport(any<Location>()) } returns true
+            every { victim.teleport(any<Location>()) } returns true
+
             arenaManager.joinArena(killer)
             arenaManager.joinArena(victim)
             arenaManager.startArena(GameType.TeamDeathMatch)
@@ -363,7 +510,10 @@ class ArenaManagerTest {
 
         @Test
         fun `onPlayerKilledByEntity does nothing when sender cannot be identified`() {
-            val victim = server.addPlayer()
+            val victim = spyk(server.addPlayer())
+
+            every { victim.teleport(any<Location>()) } returns true
+
             arenaManager.joinArena(victim)
             arenaManager.joinArena(server.addPlayer())
             arenaManager.startArena(GameType.TeamDeathMatch)
@@ -390,8 +540,11 @@ class ArenaManagerTest {
 
         @Test
         fun `onPlayerKilledByEntity increments score when sender found`() {
-            val killer = server.addPlayer()
-            val victim = server.addPlayer()
+            val killer = spyk(server.addPlayer())
+            val victim = spyk(server.addPlayer())
+
+            every { killer.teleport(any<Location>()) } returns true
+            every { victim.teleport(any<Location>()) } returns true
 
             arenaManager.joinArena(killer)
             arenaManager.joinArena(victim)

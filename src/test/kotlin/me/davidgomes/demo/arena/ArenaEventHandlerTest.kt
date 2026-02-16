@@ -1,8 +1,13 @@
 package me.davidgomes.demo.arena
 
+import io.mockk.every
+import io.mockk.mockk
 import io.mockk.spyk
 import me.davidgomes.demo.Main
+import me.davidgomes.demo.map.GameMap
+import me.davidgomes.demo.map.MapManager
 import net.kyori.adventure.text.Component
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
 import org.bukkit.damage.DamageSource
@@ -34,6 +39,7 @@ class ArenaEventHandlerTest {
     private lateinit var arenaManager: ArenaManager
     private lateinit var handler: ArenaEventHandler
     private lateinit var heroSelectorInventory: HeroSelectorInventory
+    private lateinit var mapManager: MapManager
 
     @BeforeEach
     fun setUp() {
@@ -43,8 +49,22 @@ class ArenaEventHandlerTest {
 
         val plugin = MockBukkit.load(Main::class.java)
 
+        mapManager = mockk()
+
+        val world = server.addSimpleWorld("world")
+
+        every { mapManager.getAllMaps() } returns listOf(
+            GameMap(
+                "TestMap",
+                mapOf(
+                    Team.Blue to Location(world, 0.0, 64.0, 0.0),
+                    Team.Yellow to Location(world, 5.0, 64.0, 5.0),
+                )
+            )
+        )
+
         arenaManager = ArenaManager(
-            plugin, logger, HeroManager(plugin, logger)
+            plugin, logger, HeroManager(plugin, logger), mapManager
         )
         heroSelectorInventory = spyk(HeroSelectorInventory(server))
         handler = ArenaEventHandler(logger, arenaManager, heroSelectorInventory)

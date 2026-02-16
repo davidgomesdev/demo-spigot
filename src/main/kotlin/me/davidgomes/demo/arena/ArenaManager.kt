@@ -2,6 +2,8 @@ package me.davidgomes.demo.arena
 
 import me.davidgomes.demo.heroes.Hero
 import me.davidgomes.demo.heroes.getSenderOf
+import me.davidgomes.demo.map.GameMap
+import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.ARENA_STARTED
 import me.davidgomes.demo.messages.YOU_LOST
 import me.davidgomes.demo.messages.YOU_WON
@@ -16,6 +18,7 @@ class ArenaManager(
     private val plugin: Plugin,
     private val logger: Logger,
     private val heroManager: HeroManager,
+    private val mapManager: MapManager,
     /**
      * TODO: the best way to have this compatible with FFA,
      *      is probably to store only a list of players and then assign them to teams (in TDM) when the game starts, in ArenaState
@@ -29,10 +32,25 @@ class ArenaManager(
     private var state: ArenaState = ArenaState.Lobby,
 ) {
     fun startArena(gameType: GameType) {
+        val map = mapManager.getAllMaps().random()
+
         state = ArenaState.new(gameType)
-        players.values.flatten().forEach {
-            it.inventory.clear()
-            it.sendMessage(ARENA_STARTED)
+
+        giveHeroItems(map)
+    }
+
+    private fun giveHeroItems(map: GameMap) {
+        players.entries.forEach { teamPlayers ->
+            val teamSpawn = map.teamSpawns[teamPlayers.key]!!
+
+            teamPlayers.value.forEach { player ->
+                player.sendMessage(ARENA_STARTED)
+                player.teleport(teamSpawn)
+
+                val hero = heroManager.getHero(player) ?: Hero.list.random()
+
+                hero.setHeroItems(player.inventory)
+            }
         }
     }
 
