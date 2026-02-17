@@ -1,5 +1,7 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.map.TeamSpawns
+import org.bukkit.Location
 import org.bukkit.entity.Player
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -13,7 +15,8 @@ sealed class ArenaState(
     data object Lobby : ArenaState(false)
 
     class OnGoingTeamDeathMatch(
-        val scoreGoal: Int,
+        val teamSpawns: TeamSpawns,
+        val scoreGoal: Int = SCORE_GOAL,
         val scoreboard: Map<Team, AtomicInteger> = Team.entries.associateWith { AtomicInteger(0) },
     ) : ArenaState() {
         /**
@@ -31,6 +34,7 @@ sealed class ArenaState(
     }
 
     data class OnGoingFreeForAll(
+        val spawns: List<Location>,
         val scoreboard: Map<Player, AtomicInteger>,
         val scoreGoal: Int,
     ) : ArenaState()
@@ -48,13 +52,4 @@ sealed class ArenaState(
     data class EndedFreeForAll(
         val winner: Player,
     ) : ArenaState(false)
-
-    companion object {
-        fun new(gameType: GameType): ArenaState =
-            when (gameType) {
-                GameType.TeamDeathMatch -> OnGoingTeamDeathMatch(SCORE_GOAL)
-                GameType.FreeForAll -> throw NotImplementedError("FFA is not implemented yet")
-                GameType.CaptureTheFlag -> throw NotImplementedError("CTF is not implemented yet")
-            }
-    }
 }
