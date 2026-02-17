@@ -15,26 +15,31 @@ import me.davidgomes.demo.map.creation.MapCreationManager
 import org.bukkit.configuration.serialization.ConfigurationSerialization
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scheduler.BukkitRunnable
 import utils.ExYamlConfiguration
 import java.io.File
 
 lateinit var plugin: Plugin
 
 open class Main : JavaPlugin() {
-    val mapManager = MapManager(logger, getConfigFile("maps.yml"))
-    val arenaConfig = getConfigFile("arena.yml")
-    val mapCreationManager = MapCreationManager(logger, mapManager)
-    val mapCreationCommands = MapCreationCommands(logger, mapCreationManager)
 
-    val previousLocationManager = PreviousLocationManager(this, logger)
-    val heroManager = HeroManager(this, logger)
-    val arenaManager = ArenaManager(this, logger, heroManager, mapManager, previousLocationManager, arenaConfig)
+    lateinit var arenaManager: ArenaManager
 
     init {
         plugin = this
     }
 
     override fun onEnable() {
+        val mapManager = MapManager(logger, getConfigFile("maps.yml"))
+        val arenaConfig = getConfigFile("arena.yml")
+
+        val previousLocationManager = PreviousLocationManager(plugin, logger)
+        val heroManager = HeroManager(plugin, logger)
+        arenaManager = ArenaManager(plugin, logger, heroManager, mapManager, previousLocationManager, arenaConfig)
+
+        val mapCreationManager = MapCreationManager(logger, mapManager, arenaManager)
+        val mapCreationCommands = MapCreationCommands(logger, mapCreationManager)
+
         ConfigurationSerialization.registerClass(GameMap::class.java)
         val heroSelectorInventory = HeroSelectorInventory(server)
 
@@ -42,12 +47,12 @@ open class Main : JavaPlugin() {
 
         val eventHandlers =
             listOf(
-                AnvilDropEventHandler(this, logger),
-                MapCreationInteractions(mapCreationManager),
+                AnvilDropEventHandler(plugin, logger),
+                MapCreationInteractions(logger, mapCreationManager),
                 ArenaEventHandler(logger, arenaManager, heroSelectorInventory),
             )
 
-        eventHandlers.forEach { server.pluginManager.registerEvents(it, this) }
+        eventHandlers.forEach { server.pluginManager.registerEvents(it, plugin) }
 
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commandsRegister ->
             commandsRegister.registrar().run {
@@ -56,6 +61,14 @@ open class Main : JavaPlugin() {
         }
 
         logger.info("Enabled")
+
+        // Delay is to prevent this plugin from loading before Multiverse, which was leading to
+        // issues with loading maps from the config.
+        object : BukkitRunnable() {
+            override fun run() {
+                mapManager.reloadMaps()
+            }
+        }.runTaskLater(this, 0L)
     }
 
     override fun onDisable() {
