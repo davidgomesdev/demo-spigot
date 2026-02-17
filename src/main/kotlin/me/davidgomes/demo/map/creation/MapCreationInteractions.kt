@@ -38,8 +38,10 @@ class MapCreationInteractions(
         creator.sendMessage("You've just set the spawn for team ${team.name} at your current location.")
 
         if (session.isComplete()) {
-            logger.info("Map creation session for player ${creator.name} is now ready to complete, " +
-                    "all spawns have been set.")
+            logger.info(
+                "Map creation session for player ${creator.name} is now ready to complete, " +
+                    "all spawns have been set.",
+            )
             creator.inventory.run {
                 val finishCreationItemPosition = Team.count
                 if (getItem(finishCreationItemPosition) != null) return

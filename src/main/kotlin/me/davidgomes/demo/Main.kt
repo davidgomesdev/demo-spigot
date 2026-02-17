@@ -22,7 +22,6 @@ import java.io.File
 lateinit var plugin: Plugin
 
 open class Main : JavaPlugin() {
-
     lateinit var arenaManager: ArenaManager
 
     init {

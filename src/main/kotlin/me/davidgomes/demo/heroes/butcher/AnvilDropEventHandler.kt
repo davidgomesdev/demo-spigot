@@ -30,6 +30,7 @@ class AnvilDropEventHandler(
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
         if (evt.isNotRightClick()) return
         if (anvilDropItem isNotTheSame evt.item) return
+        // TODO: verify if player is in arena
 
         logger.info("Player ${evt.player.name} casted the anvil ability")
 
@@ -38,7 +39,15 @@ class AnvilDropEventHandler(
 
         with(AnvilAbilityAttributes) {
             val blocksInSight = evt.player.getLineOfSight(null, MAX_CAST_DISTANCE)
-            val blockInSight = blocksInSight.firstOrNull { !it.isEmpty } ?: return
+            val blockInSight = blocksInSight.firstOrNull { !it.isEmpty }
+
+            if (blockInSight == null) {
+                logger.fine(
+                    "Player ${evt.player.name} tried to cast anvil drop" +
+                        " but there were no blocks in sight, cancelling ability",
+                )
+                return
+            }
 
             val spawnLocation = blockInSight.location.add(0.0, FALL_HEIGHT, 0.0)
 
@@ -47,7 +56,13 @@ class AnvilDropEventHandler(
                 return
             }
 
-            if (hasBlocksBelow(spawnLocation, FALL_HEIGHT.roundToInt())) return
+            if (hasBlocksBelow(spawnLocation, FALL_HEIGHT.roundToInt())) {
+                logger.fine(
+                    "Player ${evt.player.name} tried to cast anvil drop but" +
+                        " there are blocks below the spawn location, cancelling ability",
+                )
+                return
+            }
 
             spawnFallingAnvil(spawnLocation, evt.player)
         }
@@ -59,7 +74,10 @@ class AnvilDropEventHandler(
 
         val fallingBlock = evt.entity as FallingBlock
 
-        if (fallingBlock.blockData.material != anvilDropItem.material) return
+        if (fallingBlock.blockData.material != anvilDropItem.material) {
+            println("hmm")
+            return
+        }
 
         val sender = getSenderOf(plugin, fallingBlock) ?: return
 
@@ -103,7 +121,7 @@ class AnvilDropEventHandler(
         anvil: FallingBlock,
         sender: Player,
     ) {
-        val blockData = plugin.server.createBlockData(Material.ANVIL) as Directional
+        val blockData = plugin.server.createBlockData(anvilDropItem.material) as Directional
 
         anvil.blockData =
             blockData.apply {

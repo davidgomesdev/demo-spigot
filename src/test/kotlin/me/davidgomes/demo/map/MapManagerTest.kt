@@ -49,9 +49,11 @@ class MapManagerTest {
             )
         val gameMap = GameMap("existing_map", teamSpawns)
 
-        config.setAndSave("maps", listOf(gameMap))
+        config.setAndSave("maps", listOf(gameMap.serialize()))
 
         val manager = MapManager(logger, config)
+
+        manager.reloadMaps()
 
         assertTrue(manager existsMapWithName "existing_map")
     }
@@ -75,9 +77,11 @@ class MapManagerTest {
             )
         val gameMap = GameMap("test_map", teamSpawns)
 
-        config.setAndSave("maps", listOf(gameMap))
+        config.setAndSave("maps", listOf(gameMap.serialize()))
 
         val manager = MapManager(logger, config)
+
+        manager.reloadMaps()
 
         assertEquals(1, manager.getAllMaps().size)
         assertEquals("test_map", manager.getAllMaps().first().name)

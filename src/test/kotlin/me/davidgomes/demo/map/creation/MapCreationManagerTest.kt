@@ -1,5 +1,6 @@
 package me.davidgomes.demo.map.creation
 
+import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
@@ -28,7 +29,7 @@ class MapCreationManagerTest {
 
         logger = Logger.getLogger("MapCreationManagerTest")
         mapManager = spyk(MapManager(logger, createTempConfig()))
-        manager = MapCreationManager(logger, mapManager)
+        manager = MapCreationManager(logger, mapManager, mockk(relaxed = true))
     }
 
     @AfterTest

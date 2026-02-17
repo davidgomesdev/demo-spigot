@@ -241,12 +241,12 @@ class ArenaManager(
     }
 
     private fun endTeamDeathMatch(teamWinner: Team) {
-        sendFinishMatchMessage(teamWinner)
-
         players.values.flatten().forEach { player ->
             player.inventory.clear()
             teleportPlayerToOriginalLocation(player)
         }
+
+        sendFinishMatchMessage(teamWinner)
 
         state = ArenaState.EndedTeamDeathMatch(teamWinner)
     }
@@ -271,6 +271,6 @@ class ArenaManager(
             .forEach { (_, teamPlayers) ->
                 teamPlayers.forEach { player -> player.sendMessage(YOU_LOST) }
             }
-        players.keys.forEach(players::remove)
+        ArrayList(players.keys).forEach(players::remove)
     }
 }

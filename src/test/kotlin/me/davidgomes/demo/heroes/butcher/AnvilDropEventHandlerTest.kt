@@ -103,7 +103,8 @@ class AnvilDropEventHandlerTest {
 
             server.addPlayer(target)
 
-            val block = spyk(world.spawn(hitLocation, FallingBlockMock::class.java))
+            val block =
+                spyk(world.spawn(hitLocation, FallingBlockMock::class.java))
             val event = spyk(EntityChangeBlockEvent(block, block.location.block, block.blockData))
 
             handler.setAnvilProperties(block, sender)
