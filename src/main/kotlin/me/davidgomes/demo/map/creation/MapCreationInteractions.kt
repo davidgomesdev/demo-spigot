@@ -7,10 +7,14 @@ import me.davidgomes.demo.messages.NOT_DROPPABLE_WHILE_CREATING_MESSAGE
 import me.davidgomes.demo.messages.NOT_IN_SESSION_MESSAGE
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import utils.isNotRightClick
+import java.util.logging.Logger
 
 class MapCreationInteractions(
+    private val logger: Logger,
     private val manager: MapCreationManager,
 ) : Listener {
     @EventHandler
@@ -34,6 +38,8 @@ class MapCreationInteractions(
         creator.sendMessage("You've just set the spawn for team ${team.name} at your current location.")
 
         if (session.isComplete()) {
+            logger.info("Map creation session for player ${creator.name} is now ready to complete, " +
+                    "all spawns have been set.")
             creator.inventory.run {
                 val finishCreationItemPosition = Team.count
                 if (getItem(finishCreationItemPosition) != null) return
@@ -70,14 +76,14 @@ class MapCreationInteractions(
     }
 
     @EventHandler
-    fun onPlayerQuit(event: PlayerInteractEvent) {
+    fun onPlayerQuit(event: PlayerQuitEvent) {
         if (manager isNotInSession event.player) return
 
         manager.abortSession(event.player)
     }
 
     @EventHandler
-    fun onPlayerDeath(event: PlayerInteractEvent) {
+    fun onPlayerDeath(event: PlayerDeathEvent) {
         if (manager isNotInSession event.player) return
 
         manager.abortSession(event.player)
