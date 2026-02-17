@@ -2,6 +2,12 @@ package me.davidgomes.demo.arena
 
 import io.mockk.*
 import me.davidgomes.demo.Main
+import me.davidgomes.demo.arena.hero.selection.HeroManager
+import me.davidgomes.demo.arena.model.ArenaState
+import me.davidgomes.demo.arena.model.DEFAULT_SCORE_GOAL
+import me.davidgomes.demo.arena.model.GameType
+import me.davidgomes.demo.arena.model.Team
+import me.davidgomes.demo.createTempConfig
 import me.davidgomes.demo.heroes.butcher.ButcherHero
 import me.davidgomes.demo.heroes.setEntitySender
 import me.davidgomes.demo.map.GameMap
@@ -17,6 +23,7 @@ import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
 import org.mockbukkit.mockbukkit.entity.FallingBlockMock
 import org.mockbukkit.mockbukkit.inventory.ItemStackMock
+import utils.ExYamlConfiguration
 import java.util.*
 import java.util.logging.Logger
 import kotlin.test.*
@@ -29,6 +36,7 @@ class ArenaManagerTest {
     lateinit var mapManager: MapManager
     lateinit var previousLocationManager: PreviousLocationManager
     lateinit var world: World
+    lateinit var arenaConfig: ExYamlConfiguration
 
     @BeforeTest
     fun setUp() {
@@ -58,7 +66,16 @@ class ArenaManagerTest {
                 ),
             )
 
-        arenaManager = ArenaManager(plugin, logger, heroManager, mapManager, previousLocationManager)
+        arenaConfig = spyk(createTempConfig())
+        arenaManager =
+            ArenaManager(
+                plugin,
+                logger,
+                heroManager,
+                mapManager,
+                previousLocationManager,
+                arenaConfig,
+            )
 
         every { plugin.server } returns server
     }
@@ -193,7 +210,7 @@ class ArenaManagerTest {
             val state = arenaManager.getState()
 
             assertTrue(state is ArenaState.OnGoingTeamDeathMatch)
-            assertEquals(SCORE_GOAL, state.scoreGoal)
+            assertEquals(DEFAULT_SCORE_GOAL, state.scoreGoal)
             Team.entries.forEach { team ->
                 assertNotNull(state.scoreboard[team])
                 assertEquals(0, state.scoreboard[team]?.get())

@@ -1,7 +1,11 @@
 package me.davidgomes.demo
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
-import me.davidgomes.demo.arena.*
+import me.davidgomes.demo.arena.ArenaEventHandler
+import me.davidgomes.demo.arena.ArenaManager
+import me.davidgomes.demo.arena.PreviousLocationManager
+import me.davidgomes.demo.arena.hero.selection.HeroManager
+import me.davidgomes.demo.arena.hero.selection.HeroSelectorInventory
 import me.davidgomes.demo.heroes.butcher.AnvilDropEventHandler
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
@@ -18,12 +22,13 @@ lateinit var plugin: Plugin
 
 open class Main : JavaPlugin() {
     val mapManager = MapManager(logger, getConfigFile("maps.yml"))
+    val arenaConfig = getConfigFile("arena.yml")
     val mapCreationManager = MapCreationManager(logger, mapManager)
     val mapCreationCommands = MapCreationCommands(logger, mapCreationManager)
 
     val previousLocationManager = PreviousLocationManager(this, logger)
     val heroManager = HeroManager(this, logger)
-    val arenaManager = ArenaManager(this, logger, heroManager, mapManager, previousLocationManager)
+    val arenaManager = ArenaManager(this, logger, heroManager, mapManager, previousLocationManager, arenaConfig)
 
     init {
         plugin = this
@@ -73,5 +78,11 @@ open class Main : JavaPlugin() {
             }
     }
 
-    fun getConfigFile(filename: String): ExYamlConfiguration = ExYamlConfiguration(File(this.dataFolder, filename))
+    fun getConfigFile(filename: String): ExYamlConfiguration {
+        if (getResource(filename) != null) {
+            saveResource(filename, false)
+            logger.info("Saved default config file '$filename' to data folder")
+        }
+        return ExYamlConfiguration(File(this.dataFolder, filename))
+    }
 }

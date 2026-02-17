@@ -1,6 +1,6 @@
 package me.davidgomes.demo.map.creation
 
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.*

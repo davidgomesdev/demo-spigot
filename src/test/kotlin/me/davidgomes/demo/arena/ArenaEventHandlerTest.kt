@@ -2,7 +2,13 @@ package me.davidgomes.demo.arena
 
 import io.mockk.*
 import me.davidgomes.demo.Main
+import me.davidgomes.demo.arena.hero.selection.HeroManager
+import me.davidgomes.demo.arena.hero.selection.HeroSelectorInventory
+import me.davidgomes.demo.arena.model.ArenaState
+import me.davidgomes.demo.arena.model.GameType
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.createPlayer
+import me.davidgomes.demo.createTempConfig
 import me.davidgomes.demo.heroes.butcher.ButcherHero
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
@@ -87,6 +93,7 @@ class ArenaEventHandlerTest {
                 HeroManager(plugin, logger),
                 mapManager,
                 previousLocationManager,
+                spyk(createTempConfig()),
             )
         heroSelectorInventory = spyk(HeroSelectorInventory(server))
         handler = ArenaEventHandler(logger, arenaManager, heroSelectorInventory)

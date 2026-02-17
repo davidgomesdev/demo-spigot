@@ -3,7 +3,7 @@ package me.davidgomes.demo.map.creation
 import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.createPlayer
 import me.davidgomes.demo.createTempConfig
 import me.davidgomes.demo.map.MapManager

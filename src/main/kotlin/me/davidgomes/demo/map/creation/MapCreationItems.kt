@@ -1,6 +1,6 @@
 package me.davidgomes.demo.map.creation
 
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.items.GameItem
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack

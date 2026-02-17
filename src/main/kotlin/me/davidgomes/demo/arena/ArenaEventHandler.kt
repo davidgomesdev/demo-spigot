@@ -1,5 +1,7 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.arena.hero.selection.HeroSelectorInventory
+import me.davidgomes.demo.arena.model.GameType
 import me.davidgomes.demo.messages.ALREADY_IN_ARENA
 import me.davidgomes.demo.messages.CLICK_ON_UNEXISTENT_HERO
 import me.davidgomes.demo.messages.NOT_ENOUGH_PLAYERS_TO_START

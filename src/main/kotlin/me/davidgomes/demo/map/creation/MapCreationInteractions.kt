@@ -1,6 +1,6 @@
 package me.davidgomes.demo.map.creation
 
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.messages.CANNOT_FINISH_YET_MESSAGE
 import me.davidgomes.demo.messages.FINISHED_MAP_CREATION
 import me.davidgomes.demo.messages.NOT_DROPPABLE_WHILE_CREATING_MESSAGE

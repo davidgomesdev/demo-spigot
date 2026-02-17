@@ -1,7 +1,7 @@
 package me.davidgomes.demo.map
 
 import me.davidgomes.demo.Main
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import org.bukkit.Location
 import org.bukkit.configuration.InvalidConfigurationException
 import org.mockbukkit.mockbukkit.MockBukkit

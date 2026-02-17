@@ -3,7 +3,7 @@ package me.davidgomes.demo.map
 import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.createTempConfig
 import me.davidgomes.demo.map.creation.MapCreationManager
 import org.bukkit.Location

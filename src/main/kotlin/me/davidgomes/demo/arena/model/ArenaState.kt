@@ -1,11 +1,11 @@
-package me.davidgomes.demo.arena
+package me.davidgomes.demo.arena.model
 
 import me.davidgomes.demo.map.TeamSpawns
 import org.bukkit.Location
 import org.bukkit.entity.Player
 import java.util.concurrent.atomic.AtomicInteger
 
-const val SCORE_GOAL = 10
+const val DEFAULT_SCORE_GOAL = 10
 
 @Suppress("unused")
 sealed class ArenaState(
@@ -16,7 +16,7 @@ sealed class ArenaState(
 
     class OnGoingTeamDeathMatch(
         val teamSpawns: TeamSpawns,
-        val scoreGoal: Int = SCORE_GOAL,
+        val scoreGoal: Int = DEFAULT_SCORE_GOAL,
         val scoreboard: Map<Team, AtomicInteger> = Team.entries.associateWith { AtomicInteger(0) },
     ) : ArenaState() {
         /**
