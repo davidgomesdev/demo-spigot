@@ -11,10 +11,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.*
 import utils.isNotRightClick
 import java.util.logging.Logger
 
@@ -120,6 +117,14 @@ class ArenaEventHandler(
 
         arenaManager.startArena(GameType.TeamDeathMatch)
         logger.info("Player '${event.player.name}' started the arena")
+    }
+
+    @EventHandler
+    fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        if (!arenaManager.isInArena(event.player)) return
+
+        arenaManager.giveHeroItemsToPlayer(event.player)
+        logger.info("Player '${event.player.name}' respawned in an arena match")
     }
 
     @EventHandler

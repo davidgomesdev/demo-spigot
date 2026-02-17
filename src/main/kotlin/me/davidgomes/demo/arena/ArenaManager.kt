@@ -77,7 +77,7 @@ class ArenaManager(
         }
     }
 
-    private fun giveHeroItemsToPlayer(player: Player) {
+    fun giveHeroItemsToPlayer(player: Player) {
         val hero = heroManager.getHero(player)
 
         if (hero == null) {
