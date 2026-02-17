@@ -35,20 +35,21 @@ class MapCreationCommands(
                                 logger.info("Player ${playerCreating.name} started creating map with name $mapName")
 
                                 Command.SINGLE_SUCCESS
-                            })
-            )
-            .then(literal("reload_maps").executes { ctx ->
-                manager.mapManager.reloadMaps()
+                            },
+                    ),
+            ).then(
+                literal("reload_maps").executes { ctx ->
+                    manager.mapManager.reloadMaps()
 
-                val playerReloading = ctx.source.sender
+                    val playerReloading = ctx.source.sender
 
-                if (playerReloading is Player) {
-                    playerReloading.sendMessage("Reloaded maps")
-                }
+                    if (playerReloading is Player) {
+                        playerReloading.sendMessage("Reloaded maps")
+                    }
 
-                logger.info("Reloaded maps by command")
+                    logger.info("Reloaded maps by command")
 
-                Command.SINGLE_SUCCESS
-            })
-            .build()
+                    Command.SINGLE_SUCCESS
+                },
+            ).build()
 }

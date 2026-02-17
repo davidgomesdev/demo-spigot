@@ -10,11 +10,16 @@ import me.davidgomes.demo.createPlayer
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.CANNOT_FINISH_YET_MESSAGE
 import me.davidgomes.demo.messages.NOT_IN_SESSION_MESSAGE
+import net.kyori.adventure.text.Component
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
+import org.bukkit.damage.DamageSource
+import org.bukkit.damage.DamageType
 import org.bukkit.event.block.Action
+import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
 import org.mockbukkit.mockbukkit.inventory.ItemStackMock
@@ -33,8 +38,9 @@ class MapCreationInteractionsTest {
         server = MockBukkit.mock()
         MockBukkit.load(Main::class.java)
         mapManager = mockk(relaxed = true)
-        manager = MapCreationManager(Logger.getLogger("Test"), mapManager)
-        interactions = MapCreationInteractions(manager)
+        val logger = Logger.getLogger("MapCreationInteractionsTest")
+        manager = MapCreationManager(Logger.getLogger("Test"), mapManager, mockk(relaxed = true))
+        interactions = MapCreationInteractions(logger, manager)
     }
 
     @AfterTest
@@ -159,7 +165,7 @@ class MapCreationInteractionsTest {
         every { mapManager existsMapWithName any() } returns false
         manager.createSession(player, "test_map")
 
-        val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, null, null, BlockFace.NORTH)
+        val event = PlayerQuitEvent(player, Component.empty(), PlayerQuitEvent.QuitReason.DISCONNECTED)
 
         interactions.onPlayerQuit(event)
 
@@ -172,7 +178,15 @@ class MapCreationInteractionsTest {
         every { mapManager existsMapWithName any() } returns false
         manager.createSession(player, "test_map")
 
-        val event = PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, null, null, BlockFace.NORTH)
+        val event =
+            PlayerDeathEvent(
+                player,
+                DamageSource.builder(DamageType.PLAYER_ATTACK).build(),
+                emptyList(),
+                0,
+                Component.empty(),
+                false,
+            )
 
         interactions.onPlayerDeath(event)
 
