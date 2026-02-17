@@ -1,5 +1,6 @@
 package me.davidgomes.demo.map.creation
 
+import me.davidgomes.demo.arena.ArenaManager
 import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
@@ -13,6 +14,7 @@ import java.util.logging.Logger
 class MapCreationManager(
     val logger: Logger,
     val mapManager: MapManager,
+    val arenaManager: ArenaManager,
     val sessions: MutableMap<Player, MapCreationSession> = mutableMapOf(),
 ) {
     fun createSession(
@@ -33,8 +35,9 @@ class MapCreationManager(
 
         creator.gameMode = GameMode.CREATIVE
         creator.inventory.apply {
+            clear()
             MapCreationItems.spawnPickers.entries.forEachIndexed { index, entry ->
-                setItem(index + 1, entry.value)
+                setItem(index, entry.value)
             }
         }
 
@@ -83,6 +86,7 @@ class MapCreationManager(
         }
 
         creator.inventory.clear()
+        arenaManager.addItemToJoinArena(creator)
         creator.resetTitle()
 
         logger.info("Finished map creation session for player ${creator.name}")
