@@ -22,9 +22,10 @@ class LocationDataTypeTest {
     @BeforeTest
     fun setUp() {
         mockServer = spyk(MockBukkit.mock())
-        val mockPlugin = spyk(MockBukkit.load(Main::class.java)) {
-            every { server } returns mockServer
-        }
+        val mockPlugin =
+            spyk(MockBukkit.load(Main::class.java)) {
+                every { server } returns mockServer
+            }
         world = mockServer.addSimpleWorld("test_world")
 
         plugin = mockPlugin
@@ -181,7 +182,6 @@ class LocationDataTypeTest {
 
         val primitive = LocationDataType.toPrimitive(originalLocation, context)
 
-        println(primitive.toString())
         val reconstructedLocation = LocationDataType.fromPrimitive(primitive, context)
 
         assertEquals(originalLocation.world, reconstructedLocation.world)

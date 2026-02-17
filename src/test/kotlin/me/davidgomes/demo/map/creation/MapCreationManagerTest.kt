@@ -89,7 +89,6 @@ class MapCreationManagerTest {
             val session = manager.createSession(player, "new_map")
 
             assertEquals("new_map", session.mapName)
-            println(session.spawns.toString())
             session.spawns.forEach { (_, location) ->
                 assertNotNull(location)
                 assertEquals(player.location, location)

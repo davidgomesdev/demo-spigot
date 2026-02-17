@@ -388,6 +388,10 @@ class ArenaManagerTest {
 
             assertEquals(ArenaState.EndedTeamDeathMatch(killerTeam), stateAfter)
             assertFalse(arenaManager.isMatchOnGoing())
+            verify { previousLocationManager.saveLocation(killer) }
+            verify { previousLocationManager.saveLocation(victim) }
+            verify { killer.teleport(world.spawnLocation) }
+            verify { victim.teleport(world.spawnLocation) }
         }
 
         @Test
