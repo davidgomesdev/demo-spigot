@@ -35,10 +35,11 @@ class MapCreationInteractions(
 
         if (session.isComplete()) {
             creator.inventory.run {
-                if (getItem(Team.count) != null) return
+                val finishCreationItemPosition = Team.count
+                if (getItem(finishCreationItemPosition) != null) return
 
                 // Add next to the spawn pickers
-                setItem(Team.count, MapCreationItems.finishCreation)
+                setItem(finishCreationItemPosition, MapCreationItems.finishCreation)
                 creator.sendMessage("You can already finish the map creation, all spawns have been set.")
             }
         }

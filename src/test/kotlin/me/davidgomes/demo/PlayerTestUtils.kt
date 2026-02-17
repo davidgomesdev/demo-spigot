@@ -14,4 +14,5 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock
 fun createPlayer(server: ServerMock): PlayerMock =
     spyk(server.addPlayer()).apply {
         every { resetTitle() } just Runs
+        every { closeInventory() } just Runs
     }
