@@ -1,10 +1,12 @@
 package me.davidgomes.demo.arena
 
+import me.davidgomes.demo.arena.ArenaState.OnGoingTeamDeathMatch
 import me.davidgomes.demo.heroes.Hero
 import me.davidgomes.demo.heroes.getSenderOf
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.ARENA_STARTED
+import me.davidgomes.demo.messages.JOINED_ARENA
 import me.davidgomes.demo.messages.YOU_LOST
 import me.davidgomes.demo.messages.YOU_WON
 import org.bukkit.GameMode
@@ -20,6 +22,7 @@ class ArenaManager(
     private val logger: Logger,
     private val heroManager: HeroManager,
     private val mapManager: MapManager,
+    private val previousLocationManager: PreviousLocationManager,
     /**
      * TODO: the best way to have this compatible with FFA,
      *      is probably to store only a list of players and then assign them to teams (in TDM) when the game starts, in ArenaState
@@ -35,24 +38,38 @@ class ArenaManager(
     fun startArena(gameType: GameType) {
         val map = mapManager.getAllMaps().random()
 
-        state = ArenaState.new(gameType)
+        state =
+            when (gameType) {
+                GameType.TeamDeathMatch -> OnGoingTeamDeathMatch(map.teamSpawns, SCORE_GOAL)
+                GameType.FreeForAll -> throw NotImplementedError("FFA is not implemented yet")
+                GameType.CaptureTheFlag -> throw NotImplementedError("CTF is not implemented yet")
+            }
 
-        giveHeroItems(map)
+        preparePlayersForMatch(map)
     }
 
-    private fun giveHeroItems(map: GameMap) {
+    private fun preparePlayersForMatch(map: GameMap) {
         players.entries.forEach { teamPlayers ->
             val teamSpawn = map.teamSpawns[teamPlayers.key]!!
 
             teamPlayers.value.forEach { player ->
+                player.setRespawnLocation(teamSpawn, true)
                 player.sendMessage(ARENA_STARTED)
                 player.teleport(teamSpawn)
-
-                val hero = heroManager.getHero(player) ?: Hero.list.random()
-
-                hero.setHeroItems(player.inventory)
+                giveHeroItemsToPlayer(player)
             }
         }
+    }
+
+    private fun giveHeroItemsToPlayer(player: Player) {
+        val hero = heroManager.getHero(player)
+
+        if (hero == null) {
+            logger.severe("Player '${player.name}' has no hero set, skipping giving hero items")
+            return
+        }
+
+        hero.setHeroItems(player.inventory)
     }
 
     fun isReadyToStart(): Boolean =
@@ -80,6 +97,8 @@ class ArenaManager(
         player.inventory.setItem(1, ArenaItems.start)
 
         heroManager.setHero(player, Hero.list.random())
+        previousLocationManager.saveLocation(player)
+        player.sendMessage(JOINED_ARENA)
 
         return team
     }
@@ -114,6 +133,8 @@ class ArenaManager(
         players[team]?.remove(player)
         addItemToJoinArena(player)
     }
+
+    fun getPlayersInArena(): List<Player> = players.values.flatten()
 
     fun getState(): ArenaState = state
 
@@ -174,11 +195,17 @@ class ArenaManager(
         logger.info("Player '${executor.name}' killed player '${deadPlayer.name}' in an arena match")
 
         when (val currentState = state) {
-            is ArenaState.OnGoingTeamDeathMatch -> {
+            is OnGoingTeamDeathMatch -> {
                 val teamWinner = currentState.scoreKill(executorTeam) ?: return
 
                 logger.info("Team '${teamWinner.name}' won the TDM arena")
                 sendFinishMatchMessage(teamWinner)
+
+                players.values.flatten().forEach { player ->
+                    player.inventory.clear()
+                    teleportPlayerToOriginalLocation(player)
+                }
+
                 state = ArenaState.EndedTeamDeathMatch(teamWinner)
             }
 
@@ -186,6 +213,19 @@ class ArenaManager(
                 "Game type ${currentState::class} not yet implemented",
             )
         }
+    }
+
+    private fun teleportPlayerToOriginalLocation(player: Player) {
+        val savedLocation = previousLocationManager.getSavedLocation(player)
+
+        // This is nullable, so it's not a problem
+        player.respawnLocation = savedLocation
+
+        savedLocation?.also(player::teleport)
+            ?: logger.warning(
+                "Player '${player.name}' does not have a saved location" +
+                    " to teleport to after the match ended",
+            )
     }
 
     private fun sendFinishMatchMessage(executorTeam: Team) {

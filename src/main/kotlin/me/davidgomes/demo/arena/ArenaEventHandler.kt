@@ -1,6 +1,9 @@
 package me.davidgomes.demo.arena
 
-import me.davidgomes.demo.messages.*
+import me.davidgomes.demo.messages.ALREADY_IN_ARENA
+import me.davidgomes.demo.messages.CLICK_ON_UNEXISTENT_HERO
+import me.davidgomes.demo.messages.NOT_ENOUGH_PLAYERS_TO_START
+import me.davidgomes.demo.messages.NOT_IN_ARENA
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -40,7 +43,6 @@ class ArenaEventHandler(
         }
 
         arenaManager.joinArena(event.player)
-        event.player.sendMessage(JOINED_ARENA)
         logger.info("Player '${event.player.name}' joined an arena")
     }
 

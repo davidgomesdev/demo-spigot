@@ -1,19 +1,13 @@
 package me.davidgomes.demo.arena
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import io.mockk.*
 import me.davidgomes.demo.Main
 import me.davidgomes.demo.heroes.butcher.ButcherHero
 import me.davidgomes.demo.heroes.setEntitySender
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.ARENA_STARTED
-import org.bukkit.GameMode
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
+import org.bukkit.*
 import org.bukkit.entity.Entity
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataType
@@ -33,17 +27,25 @@ class ArenaManagerTest {
     lateinit var plugin: Main
     lateinit var heroManager: HeroManager
     lateinit var mapManager: MapManager
+    lateinit var previousLocationManager: PreviousLocationManager
+    lateinit var world: World
 
     @BeforeTest
     fun setUp() {
         MockBukkit.mock()
         server = ServerMock()
         plugin = spyk(MockBukkit.load(Main::class.java))
+        world = server.addSimpleWorld("test_world")
 
         val logger = Logger.getLogger("ArenaManagerTest")
 
         heroManager = spyk(HeroManager(plugin, logger))
         mapManager = mockk(relaxUnitFun = true)
+        previousLocationManager =
+            mockk {
+                every { saveLocation(any()) } just Runs
+                every { getSavedLocation(any()) } returns world.spawnLocation
+            }
 
         every { mapManager.getAllMaps() } returns
             listOf(
@@ -56,7 +58,7 @@ class ArenaManagerTest {
                 ),
             )
 
-        arenaManager = ArenaManager(plugin, logger, heroManager, mapManager)
+        arenaManager = ArenaManager(plugin, logger, heroManager, mapManager, previousLocationManager)
 
         every { plugin.server } returns server
     }
@@ -400,7 +402,16 @@ class ArenaManagerTest {
                     java.util.concurrent.atomic
                         .AtomicInteger(0)
                 }
-            val testState = ArenaState.OnGoingTeamDeathMatch(scoreGoal = 5, scoreboard = testScoreboard)
+            val world = server.addSimpleWorld("test_world")
+            val testState =
+                ArenaState.OnGoingTeamDeathMatch(
+                    mapOf(
+                        Team.Yellow to Location(world, 0.0, 65.0, 0.0),
+                        Team.Blue to Location(world, 10.0, 65.0, 0.0),
+                    ),
+                    5,
+                    testScoreboard,
+                )
 
             val stateField = ArenaManager::class.java.getDeclaredField("state")
             stateField.isAccessible = true

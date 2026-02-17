@@ -11,6 +11,8 @@ class HeroManager(
     private val plugin: Plugin,
     private val logger: Logger,
 ) {
+    private val pdcKey: String = "hero"
+
     /**
      * Note: there's no need to "reset" or remove the tag, as it will be overridden when the player joins another arena
      */
@@ -19,7 +21,7 @@ class HeroManager(
         hero: Hero,
     ) {
         player.persistentDataContainer.set(
-            NamespacedKey(plugin, "hero"),
+            NamespacedKey(plugin, pdcKey),
             PersistentDataType.STRING,
             hero.name,
         )
@@ -29,7 +31,7 @@ class HeroManager(
     fun getHero(player: Player): Hero? {
         val heroName =
             player.persistentDataContainer
-                .get(NamespacedKey(plugin, "hero"), PersistentDataType.STRING)
+                .get(NamespacedKey(plugin, pdcKey), PersistentDataType.STRING)
 
         if (heroName == null) {
             logger.warning("Player '${player.name}' does not have a hero set")
