@@ -1,6 +1,7 @@
 package me.davidgomes.demo.arena
 
 import me.davidgomes.demo.Main
+import me.davidgomes.demo.arena.hero.selection.HeroManager
 import me.davidgomes.demo.heroes.butcher.ButcherHero
 import org.bukkit.NamespacedKey
 import org.bukkit.persistence.PersistentDataType

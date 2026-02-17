@@ -1,7 +1,7 @@
 package me.davidgomes.demo.map.creation
 
 import me.davidgomes.demo.Main
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import org.bukkit.Material
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock

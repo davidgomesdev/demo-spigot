@@ -5,7 +5,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import me.davidgomes.demo.Main
-import me.davidgomes.demo.arena.Team
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.createPlayer
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.messages.CANNOT_FINISH_YET_MESSAGE

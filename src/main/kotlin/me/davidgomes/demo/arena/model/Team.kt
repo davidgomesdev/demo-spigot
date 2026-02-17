@@ -1,4 +1,4 @@
-package me.davidgomes.demo.arena
+package me.davidgomes.demo.arena.model
 
 import org.bukkit.Material
 

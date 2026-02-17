@@ -1,4 +1,4 @@
-package me.davidgomes.demo.arena
+package me.davidgomes.demo.arena.hero.selection
 
 import me.davidgomes.demo.heroes.Hero
 import net.kyori.adventure.text.Component

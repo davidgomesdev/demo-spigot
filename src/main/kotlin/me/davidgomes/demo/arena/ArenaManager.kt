@@ -1,6 +1,11 @@
 package me.davidgomes.demo.arena
 
-import me.davidgomes.demo.arena.ArenaState.OnGoingTeamDeathMatch
+import me.davidgomes.demo.arena.hero.selection.HeroManager
+import me.davidgomes.demo.arena.model.ArenaState
+import me.davidgomes.demo.arena.model.ArenaState.OnGoingTeamDeathMatch
+import me.davidgomes.demo.arena.model.DEFAULT_SCORE_GOAL
+import me.davidgomes.demo.arena.model.GameType
+import me.davidgomes.demo.arena.model.Team
 import me.davidgomes.demo.heroes.Hero
 import me.davidgomes.demo.heroes.getSenderOf
 import me.davidgomes.demo.map.GameMap
@@ -14,6 +19,7 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
+import utils.ExYamlConfiguration
 import java.util.logging.Logger
 
 // TODO: NOT THREAD-SAFE, needs a mutex on write
@@ -23,6 +29,7 @@ class ArenaManager(
     private val heroManager: HeroManager,
     private val mapManager: MapManager,
     private val previousLocationManager: PreviousLocationManager,
+    private val arenaConfig: ExYamlConfiguration,
     /**
      * TODO: the best way to have this compatible with FFA,
      *      is probably to store only a list of players and then assign them to teams (in TDM) when the game starts, in ArenaState
@@ -40,7 +47,16 @@ class ArenaManager(
 
         state =
             when (gameType) {
-                GameType.TeamDeathMatch -> OnGoingTeamDeathMatch(map.teamSpawns, SCORE_GOAL)
+                GameType.TeamDeathMatch ->
+                    OnGoingTeamDeathMatch(
+                        map.teamSpawns,
+                        arenaConfig
+                            .getInt("tdm.score_goal", DEFAULT_SCORE_GOAL)
+                            .also { scoreGoal ->
+                                logger.info("Using score goal of $scoreGoal for TDM matches")
+                            },
+                    )
+
                 GameType.FreeForAll -> throw NotImplementedError("FFA is not implemented yet")
                 GameType.CaptureTheFlag -> throw NotImplementedError("CTF is not implemented yet")
             }
