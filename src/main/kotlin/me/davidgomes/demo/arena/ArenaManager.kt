@@ -157,6 +157,13 @@ class ArenaManager(
         }
 
         player.teleport(previousLocation)
+
+        if (state.isOnGoing && players[team]?.isEmpty() == true) {
+            logger.info("Team '${team.name}' has no more players, ending the match")
+
+            val otherTeam = players.keys.first { it != team }
+            endTeamDeathMatch(otherTeam)
+        }
     }
 
     fun getPlayersInArena(): List<Player> = players.values.flatten()
@@ -224,20 +231,24 @@ class ArenaManager(
                 val teamWinner = currentState.scoreKill(executorTeam) ?: return
 
                 logger.info("Team '${teamWinner.name}' won the TDM arena")
-                sendFinishMatchMessage(teamWinner)
-
-                players.values.flatten().forEach { player ->
-                    player.inventory.clear()
-                    teleportPlayerToOriginalLocation(player)
-                }
-
-                state = ArenaState.EndedTeamDeathMatch(teamWinner)
+                endTeamDeathMatch(teamWinner)
             }
 
             else -> throw NotImplementedError(
                 "Game type ${currentState::class} not yet implemented",
             )
         }
+    }
+
+    private fun endTeamDeathMatch(teamWinner: Team) {
+        sendFinishMatchMessage(teamWinner)
+
+        players.values.flatten().forEach { player ->
+            player.inventory.clear()
+            teleportPlayerToOriginalLocation(player)
+        }
+
+        state = ArenaState.EndedTeamDeathMatch(teamWinner)
     }
 
     private fun teleportPlayerToOriginalLocation(player: Player) {
@@ -256,9 +267,10 @@ class ArenaManager(
     private fun sendFinishMatchMessage(executorTeam: Team) {
         players[executorTeam]!!.forEach { player -> player.sendMessage(YOU_WON) }
         players.entries
-            .filterNot { it.key != executorTeam }
+            .filterNot { it.key == executorTeam }
             .forEach { (_, teamPlayers) ->
                 teamPlayers.forEach { player -> player.sendMessage(YOU_LOST) }
             }
+        players.keys.forEach(players::remove)
     }
 }
