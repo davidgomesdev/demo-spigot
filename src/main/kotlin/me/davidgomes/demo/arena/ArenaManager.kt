@@ -148,6 +148,15 @@ class ArenaManager(
 
         players[team]?.remove(player)
         addItemToJoinArena(player)
+
+        val previousLocation = previousLocationManager.getSavedLocation(player)
+
+        if (previousLocation == null) {
+            logger.warning("Player '${player.name}' does not have a previous location saved, skipping teleport")
+            return
+        }
+
+        player.teleport(previousLocation)
     }
 
     fun getPlayersInArena(): List<Player> = players.values.flatten()

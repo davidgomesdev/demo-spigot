@@ -61,28 +61,17 @@ open class Main : JavaPlugin() {
     override fun onDisable() {
         logger.info("Disabled")
 
-        teleportPlayersBackToOriginalLocation()
-    }
-
-    private fun teleportPlayersBackToOriginalLocation() {
-        arenaManager
-            .getPlayersInArena()
-            .associateBy(previousLocationManager::getSavedLocation)
-            .forEach { (previousLocation, player) ->
-                if (previousLocation == null) {
-                    logger.warning("Player '${player.name}' does not have a previous location saved, skipping teleport")
-                    return@forEach
-                }
-
-                player.teleport(previousLocation)
-            }
+        arenaManager.getPlayersInArena().forEach(arenaManager::leaveArena)
     }
 
     fun getConfigFile(filename: String): ExYamlConfiguration {
-        if (getResource(filename) != null) {
+        val configFile = File(this.dataFolder, filename)
+
+        if (getResource(filename) != null && !configFile.exists()) {
             saveResource(filename, false)
             logger.info("Saved default config file '$filename' to data folder")
         }
-        return ExYamlConfiguration(File(this.dataFolder, filename))
+
+        return ExYamlConfiguration(configFile)
     }
 }
