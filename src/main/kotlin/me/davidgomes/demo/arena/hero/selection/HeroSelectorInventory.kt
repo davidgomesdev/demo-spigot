@@ -10,11 +10,16 @@ class HeroSelectorInventory(
     val server: Server,
 ) : InventoryHolder {
     private val inventory: Inventory =
-        server.createInventory(
-            this,
-            Hero.list.size.coerceAtLeast(9),
-            Component.text("Hero Selector"),
-        )
+        server
+            .createInventory(
+                this,
+                Hero.list.size.coerceAtLeast(9),
+                Component.text("Hero Selector"),
+            ).apply {
+                Hero.list.forEachIndexed { index, hero ->
+                    setItem(index, hero.selectorItem)
+                }
+            }
 
     override fun getInventory(): Inventory = inventory
 }
