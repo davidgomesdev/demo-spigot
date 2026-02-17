@@ -16,22 +16,39 @@ class MapCreationCommands(
 ) {
     val createMap: LiteralCommandNode<CommandSourceStack> =
         literal("mg")
-            .then(literal("create_map"))
-            .then(argument("map_name", StringArgumentType.greedyString()))
-            .executes { ctx ->
-                val mapName = StringArgumentType.getString(ctx, "map_name")
-                val playerCreating = ctx.source.sender
+            .then(
+                literal("create_map")
+                    .then(
+                        argument("map_name", StringArgumentType.greedyString())
+                            .executes { ctx ->
+                                val mapName = StringArgumentType.getString(ctx, "map_name")
+                                val playerCreating = ctx.source.sender
 
-                if (playerCreating !is Player) {
-                    logger.warning("Only players can create maps")
-                    return@executes Command.SINGLE_SUCCESS
+                                if (playerCreating !is Player) {
+                                    logger.warning("Only players can create maps")
+                                    return@executes Command.SINGLE_SUCCESS
+                                }
+
+                                manager.createSession(playerCreating, mapName)
+                                playerCreating.sendMessage(CREATION_MODE_STARTED)
+
+                                logger.info("Player ${playerCreating.name} started creating map with name $mapName")
+
+                                Command.SINGLE_SUCCESS
+                            })
+            )
+            .then(literal("reload_maps").executes { ctx ->
+                manager.mapManager.reloadMaps()
+
+                val playerReloading = ctx.source.sender
+
+                if (playerReloading is Player) {
+                    playerReloading.sendMessage("Reloaded maps")
                 }
 
-                manager.createSession(playerCreating, mapName)
-                playerCreating.sendMessage(CREATION_MODE_STARTED)
-
-                logger.info("Player ${playerCreating.name} started creating map with name $mapName")
+                logger.info("Reloaded maps by command")
 
                 Command.SINGLE_SUCCESS
-            }.build()
+            })
+            .build()
 }
