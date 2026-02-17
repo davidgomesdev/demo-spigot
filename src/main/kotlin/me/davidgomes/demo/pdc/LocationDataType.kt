@@ -25,7 +25,7 @@ object LocationDataType : PersistentDataType<ByteArray, Location> {
         context: PersistentDataAdapterContext,
     ): Location {
         val data = String(primitive).split(",")
-        val decodedWorldName = Base64.decode(data[0]).toString()
+        val decodedWorldName = Base64.decode(data[0]).decodeToString()
         val x = data[1].toDouble()
         val y = data[2].toDouble()
         val z = data[3].toDouble()
