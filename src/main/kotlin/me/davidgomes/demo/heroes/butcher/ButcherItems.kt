@@ -16,7 +16,7 @@ object ButcherItems {
         )
     val anvilDropItem =
         GameItem(
-            material = Material.ANVIL,
+            material = Material.CHIPPED_ANVIL,
             name = "Anvil Drop",
         )
 }
