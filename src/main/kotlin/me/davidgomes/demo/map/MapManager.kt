@@ -9,11 +9,8 @@ class MapManager(
     val config: ExYamlConfiguration,
 ) {
     // Name to GameMap
-    private var maps: Map<String, GameMap>
-
-    init {
-        maps = reloadMaps()
-    }
+    // Needs to be initialized empty and only loaded after enablement
+    private var maps: Map<String, GameMap> = emptyMap()
 
     infix fun existsMapWithName(name: String): Boolean = maps.containsKey(name)
 
@@ -25,7 +22,8 @@ class MapManager(
     fun reloadMaps(): Map<String, GameMap> {
         config.reload()
         maps =
-            (config.getList("maps", listOf<GameMap>()) as List<GameMap>)
+            (config.getList("maps", listOf<Map<String, *>>()) as List<Map<String, *>>)
+                .map { GameMap.deserialize(it) }
                 .associateBy { it.name }
 
         logger.info("Reloaded maps (${maps.size} maps loaded)")
@@ -36,7 +34,7 @@ class MapManager(
     fun addMap(creationSession: MapCreationManager.MapCreationSession): GameMap {
         val newMap = creationSession.toGameMap()
 
-        config.setAndSave("maps", (maps.values + newMap))
+        config.setAndSave("maps", (maps.values + newMap).map(GameMap::serialize))
         logger.info("Added map '${creationSession.mapName}'")
 
         reloadMaps()

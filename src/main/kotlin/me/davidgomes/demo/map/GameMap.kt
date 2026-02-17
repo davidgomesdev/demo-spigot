@@ -7,7 +7,7 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable
 
 typealias TeamSpawns = Map<Team, Location>
 
-data class GameMap(
+class GameMap(
     val name: String,
     val teamSpawns: TeamSpawns,
 ) : ConfigurationSerializable {
@@ -20,7 +20,7 @@ data class GameMap(
     companion object {
         @JvmStatic
         @Suppress("UNCHECKED_CAST")
-        fun deserialize(serialized: Map<String, Any>): GameMap {
+        fun deserialize(serialized: Map<String, *>): GameMap {
             val name = serialized["name"] as? String ?: throw InvalidConfigurationException("Missing 'name' field")
             val rawTeamSpawns =
                 serialized["teamSpawns"] as? Map<Any, Any>
