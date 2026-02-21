@@ -12,7 +12,7 @@ fun hasBlocksBelow(
 
     val world = from.world!!
 
-    repeat(range + 1) {
+    repeat(range) {
         val blockAtLocation =
             world.getBlockAt(
                 from.x.roundToInt(),
