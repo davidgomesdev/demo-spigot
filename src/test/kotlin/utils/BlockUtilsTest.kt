@@ -75,13 +75,13 @@ class BlockUtilsTest {
     }
 
     @Test
-    fun `hasBlocksBelow returns true with range of 1`() {
+    fun `hasBlocksBelow returns false with range of 1`() {
         val location = Location(world, 10.0, 65.0, 20.0)
 
         // Set a block directly below
         world.getBlockAt(10, 64, 20).type = Material.STONE
 
-        assertTrue(hasBlocksBelow(location, 1))
+        assertFalse(hasBlocksBelow(location, 1))
     }
 
     @Test

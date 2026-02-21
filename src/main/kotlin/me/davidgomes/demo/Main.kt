@@ -1,5 +1,6 @@
 package me.davidgomes.demo
 
+import io.papermc.paper.command.brigadier.Commands.literal
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import me.davidgomes.demo.arena.ArenaEventHandler
 import me.davidgomes.demo.arena.ArenaManager
@@ -7,6 +8,7 @@ import me.davidgomes.demo.arena.PreviousLocationManager
 import me.davidgomes.demo.arena.hero.selection.HeroManager
 import me.davidgomes.demo.arena.hero.selection.HeroSelectorInventory
 import me.davidgomes.demo.heroes.butcher.AnvilDropEventHandler
+import me.davidgomes.demo.manual_testing.DebugCommands
 import me.davidgomes.demo.map.GameMap
 import me.davidgomes.demo.map.MapManager
 import me.davidgomes.demo.map.creation.MapCreationCommands
@@ -36,13 +38,15 @@ open class Main : JavaPlugin() {
         val heroManager = HeroManager(plugin, logger)
         arenaManager = ArenaManager(plugin, logger, heroManager, mapManager, previousLocationManager, arenaConfig)
 
+        val rootCommand = literal("mg")
+        val debugCommands = DebugCommands(logger, rootCommand)
         val mapCreationManager = MapCreationManager(logger, mapManager, arenaManager)
-        val mapCreationCommands = MapCreationCommands(logger, mapCreationManager)
+        val mapCreationCommands = MapCreationCommands(logger, mapCreationManager, rootCommand)
 
         ConfigurationSerialization.registerClass(GameMap::class.java)
         val heroSelectorInventory = HeroSelectorInventory(server)
 
-        val commandsToRegister = arrayOf(mapCreationCommands.createMap)
+        val commandsToRegister = arrayOf(mapCreationCommands.createMap.build(), debugCommands.getHeroKit.build())
 
         val eventHandlers =
             listOf(

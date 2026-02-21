@@ -30,7 +30,6 @@ class AnvilDropEventHandler(
     fun onPlayerRightClickAnvil(evt: PlayerInteractEvent) {
         if (evt.isNotRightClick()) return
         if (anvilDropItem isNotTheSame evt.item) return
-        // TODO: verify if player is in arena
 
         logger.info("Player ${evt.player.name} casted the anvil ability")
 
@@ -44,7 +43,7 @@ class AnvilDropEventHandler(
             if (blockInSight == null) {
                 logger.fine(
                     "Player ${evt.player.name} tried to cast anvil drop" +
-                        " but there were no blocks in sight, cancelling ability",
+                            " but there were no blocks in sight, cancelling ability",
                 )
                 return
             }
@@ -56,15 +55,17 @@ class AnvilDropEventHandler(
                 return
             }
 
+            // Check if there are blocks below the spawn location, to have the anvil drop exactly from FALL_HEIGHT
             if (hasBlocksBelow(spawnLocation, FALL_HEIGHT.roundToInt())) {
                 logger.fine(
                     "Player ${evt.player.name} tried to cast anvil drop but" +
-                        " there are blocks below the spawn location, cancelling ability",
+                            " there are blocks below the spawn location, cancelling ability",
                 )
                 return
             }
 
             spawnFallingAnvil(spawnLocation, evt.player)
+            logger.info("Spawned falling anvil for player ${evt.player.name}")
         }
     }
 
@@ -74,10 +75,7 @@ class AnvilDropEventHandler(
 
         val fallingBlock = evt.entity as FallingBlock
 
-        if (fallingBlock.blockData.material != anvilDropItem.material) {
-            println("hmm")
-            return
-        }
+        if (fallingBlock.blockData.material != anvilDropItem.material) return
 
         val sender = getSenderOf(plugin, fallingBlock) ?: return
 

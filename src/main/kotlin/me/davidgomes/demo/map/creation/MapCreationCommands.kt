@@ -2,7 +2,7 @@ package me.davidgomes.demo.map.creation
 
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.StringArgumentType
-import com.mojang.brigadier.tree.LiteralCommandNode
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands.argument
 import io.papermc.paper.command.brigadier.Commands.literal
@@ -13,9 +13,10 @@ import java.util.logging.Logger
 class MapCreationCommands(
     val logger: Logger,
     val manager: MapCreationManager,
+    rootCommand: LiteralArgumentBuilder<CommandSourceStack>,
 ) {
-    val createMap: LiteralCommandNode<CommandSourceStack> =
-        literal("mg")
+    val createMap: LiteralArgumentBuilder<CommandSourceStack> =
+        rootCommand
             .then(
                 literal("create_map")
                     .then(
@@ -51,5 +52,5 @@ class MapCreationCommands(
 
                     Command.SINGLE_SUCCESS
                 },
-            ).build()
+            )
 }
