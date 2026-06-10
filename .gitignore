@@ -40,3 +40,10 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# Agents
+
+skills-lock.json
+.github/copilot-instructions.md
+.agents
+
